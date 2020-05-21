@@ -1,0 +1,142 @@
+CREATE OR REPLACE TRIGGER TRG_VALIDATE_INSERT_CP
+
+BEFORE INSERT ON ProgrammeCourse
+
+FOR EACH ROW
+DECLARE
+
+    OVER_PERSEMCOURSE_LIMIT EXCEPTION;
+    ALREADY_EXIST_ERROR     EXCEPTION;
+    INVALID_SEM_ERROR       EXCEPTION;
+    OVER_PERSHORTSEMCOURSE_LIMIT EXCEPTION;
+    v_CourseCode         Course.CourseCode%TYPE;
+    v_ProgrammeCode      Programme.ProgrammeCode%TYPE;
+    v_PerSemCourse       NUMBER;   
+
+BEGIN
+
+    SELECT ProgrammeCode INTO v_ProgrammeCode
+    FROM Programme
+    WHERE ProgrammeCode = :new.ProgrammeCode;
+
+    IF SQL%FOUND THEN
+
+        BEGIN
+            SELECT CourseCode INTO v_CourseCode
+            FROM Course
+            WHERE CourseCode = :new.CourseCode;
+
+            IF SQL%FOUND THEN
+
+                SELECT COUNT(CourseCode) INTO v_PerSemCourse
+                FROM ProgrammeCourse
+                WHERE ProgrammeCode = :new.ProgrammeCode
+                AND Semester=:new.Semester;
+                
+                IF :new.Semester IN ('Y1S3','Y2S3','Y3S3') THEN
+                    IF v_PerSemCourse>3 THEN
+                        RAISE OVER_PERSHORTSEMCOURSE_LIMIT;
+                    END IF;
+
+                ELSIF :new.Semester IN ('Y1S1','Y1S2','Y2S1','Y2S2','Y3S1','Y3S2') THEN
+                    IF v_PerSemCourse>6 THEN
+                        RAISE OVER_PERSEMCOURSE_LIMIT;
+                    END IF;
+
+                ELSE
+                    RAISE INVALID_SEM_ERROR;
+                END IF;
+                
+                    BEGIN
+
+                    SELECT ProgrammeCode, CourseCode INTO v_ProgrammeCode,v_CourseCode
+                    FROM ProgrammeCourse
+                    WHERE ProgrammeCode = :new.ProgrammeCode
+                    AND CourseCode = :new.CourseCode;
+
+                    IF SQL%FOUND THEN
+                       RAISE ALREADY_EXIST_ERROR;
+                    ELSE
+                       RAISE NO_DATA_FOUND;
+                    END IF;
+                        EXCEPTION
+                            WHEN NO_DATA_FOUND THEN
+                               NULL;
+                            WHEN ALREADY_EXIST_ERROR THEN
+                               RAISE_APPLICATION_ERROR(-20000,v_CourseCode||' Course already exist in '||v_ProgrammeCode||' Program');
+                    END;
+
+            ELSE
+                RAISE NO_DATA_FOUND;
+            END IF;
+
+            EXCEPTION
+                WHEN NO_DATA_FOUND THEN
+                    RAISE_APPLICATION_ERROR(-20000,:new.CourseCode||' Course does not available!');
+                WHEN OVER_PERSEMCOURSE_LIMIT THEN
+                    RAISE_APPLICATION_ERROR(-20000,'Long Semester only allowed MAX 7 courses!');
+                WHEN INVALID_SEM_ERROR THEN
+                    RAISE_APPLICATION_ERROR(-20000,:new.Semester||' semester is invalid! ');
+                WHEN OVER_PERSHORTSEMCOURSE_LIMIT THEN
+                    RAISE_APPLICATION_ERROR(-20000,'Short Semester only allowed MAX 4 courses!');
+               
+        END;
+
+    END IF;
+
+    EXCEPTION
+
+       WHEN NO_DATA_FOUND THEN
+           RAISE_APPLICATION_ERROR(-20000, :new.ProgrammeCode ||' Program does not available!');
+    
+END;
+/
+
+--format
+column ProgrammeCode format A14 heading 'Program Code'
+column CourseCode format A14 heading 'Program Name'
+column Semester format A14 heading 'Semester'
+
+--ady exist
+insert into programmeCourse Values('RSF','BACS2003','Y1S1');
+
+--invalid program
+insert into programmeCourse Values('RSS','BACS2003','Y1S1');
+
+--invalid course
+insert into programmeCourse Values('RSF','BACS2000','Y1S1');
+
+--invalid sem
+insert into programmeCourse Values('RSF','AACS1084','Y1S4');
+
+--over limit in Long Sem
+insert into programmeCourse Values('RSF','AACS1084','Y1S1');
+
+select * from programmeCourse
+where programmecode = 'RSF' AND
+semester='Y1S1';
+
+insert into programmeCourse Values('RSF','AACS2123','Y1S1');
+
+--over limit in Short Sem
+
+insert into programmeCourse Values('RSF','AACS2123','Y1S3');
+
+select * from programmeCourse
+where programmecode = 'RSF' AND
+semester='Y1S3';
+
+insert into programmeCourse Values('RSF','AAMS3184','Y1S3');
+
+delete from programmecourse
+where programmecode = 'RSF' AND coursecode = 'AACS1084';
+
+delete from programmecourse
+where programmecode = 'RSF' AND coursecode = 'AACS2123';
+
+--clear
+ttitle off
+clear breaks
+clear column
+clear computes
+

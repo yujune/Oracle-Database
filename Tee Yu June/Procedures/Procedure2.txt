@@ -1,0 +1,85 @@
+SET pagesize 500
+SET linesize 500
+
+CREATE OR REPLACE PROCEDURE PRC_UPDATE_FEE(In_Updt_Percent IN VARCHAR, In_Course_Type IN VARCHAR) IS
+
+v_num_records  number;
+v_old_FeePerCH Course.FeePerCH%TYPE;
+v_new_FeePerCH Course.FeePerCH%TYPE;
+NON_NUMERIC_PERCENT_ERROR exception;
+NO_THIS_COURSE_TYPE  exception;
+v_empty_cursor boolean;
+
+CURSOR CourseFee_Cursor IS
+    SELECT PC.ProgrammeCode AS ProgrammeCode,C.CourseCode, C.CourseName, C.CourseType, C.FeePerCH
+    FROM Course C, ProgrammeCourse PC
+    WHERE C.CourseCode = PC.CourseCode
+    AND UPPER(C.CourseType) = UPPER(In_Course_Type);
+
+CourseFee_rec CourseFee_Cursor%ROWTYPE;
+
+BEGIN
+
+    IF(is_number(In_Updt_Percent)=0) THEN
+        RAISE NON_NUMERIC_PERCENT_ERROR;
+    END IF;
+    
+    v_empty_cursor := true;
+    
+    FOR CourseFee_rec IN CourseFee_Cursor LOOP
+        v_empty_cursor := false;
+    END LOOP;
+
+    IF(v_empty_cursor = true) THEN
+        RAISE NO_THIS_COURSE_TYPE;
+    END IF;
+    
+
+    v_num_records := 0;
+    
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(' Fee Per Credits of '||In_Course_Type ||' Successfully Increased by '||In_Updt_Percent||'%');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('============================ REPORT ===============================');
+    --DBMS_OUTPUT.PUT_LINE('=== '||' =========== '||' =========== '||' ======= '||' =========== ');
+    DBMS_OUTPUT.PUT_LINE('NO  '||'Program Code '||' Course Code '||' Course Type    '||' Old Fee '||' Updated Fee ');
+    DBMS_OUTPUT.PUT_LINE('=== '||'============ '||' =========== '||' ============== '||' ======= '||' =========== ');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    FOR CourseFee_rec IN CourseFee_Cursor LOOP
+        v_old_FeePerCH := CourseFee_rec.FeePerCH;
+        v_new_FeePerCH := v_old_FeePerCH * ((100 + In_Updt_Percent)/100);
+
+        UPDATE COURSE
+        SET FeePerCH = v_new_FeePerCH
+        WHERE CourseCode = CourseFee_rec.CourseCode
+        AND CourseType = In_Course_Type;
+    
+    DBMS_OUTPUT.PUT_LINE(to_char(CourseFee_Cursor%rowcount,'000')||'  '||RPAD(CourseFee_rec.ProgrammeCode,13,' ')||RPAD(CourseFee_rec.CourseCode,13,' ')||RPAD(CourseFee_rec.CourseType,14,' ')||RPAD(to_char(v_old_FeePerCH,'$999.99'),9,' ')||RPAD(to_char(v_new_FeePerCH,'$999.99'),9,' '));
+    
+    v_num_records := v_num_records+1;
+        
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('========================== END OF REPORT ==========================');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('Number of Records Updated : '||v_num_records);
+
+    EXCEPTION
+        WHEN NON_NUMERIC_PERCENT_ERROR THEN
+            RAISE_APPLICATION_ERROR(-20000,'Update Pecent Must Be a Number!');
+
+        WHEN NO_THIS_COURSE_TYPE THEN
+            RAISE_APPLICATION_ERROR(-20000,'Inserted Course Type "'||In_Course_Type||'" Cannot Be Found!');
+
+END;
+/
+
+--NON_NUMERIC_PERCENT_ERROR
+EXECUTE PRC_UPDATE_FEE('Ten', 'Core');
+
+--NO_THIS_COURSE_TYPE
+EXECUTE PRC_UPDATE_FEE(10, 'Main Core');
+
+--Succesful
+EXECUTE PRC_UPDATE_FEE(10, 'Core Elective');

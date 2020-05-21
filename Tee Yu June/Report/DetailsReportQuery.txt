@@ -1,0 +1,55 @@
+Set Serveroutput ON;
+Set Linesize 120;
+Set PageSize 500;
+
+CREATE OR REPLACE PROCEDURE proc_details_report(In_Programme IN VARCHAR)AS
+
+var_course_num        NUMBER(2);
+var_course_fee        NUMBER(7,2);
+var_credits           NUMBER(3);
+var_total_course      NUMBER(3):=0;
+var_total_credits     NUMBER(3):=0;
+var_total_fees        NUMBER(8,2):=0;
+
+CURSOR programme_cursor IS
+    SELECT UNIQUE SEMESTER
+    FROM ProgrammeCourse
+    ORDER BY 1;
+
+programme_rec programme_cursor%ROWTYPE;
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',11,' ')||'Programme Semester Detail Report');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: '||To_Char(sysdate,'dd-mm-yyyy'),51,' ')||'Page: 1');
+    DBMS_OUTPUT.PUT_LINE('Programme Code: '||In_Programme);
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('==========================================================');
+    DBMS_OUTPUT.PUT_LINE('NO '||' Semester  '||RPAD(' Course Number',17,' ')||RPAD('Total Credits',20,' ')||RPAD('Fee',13,' '));
+    DBMS_OUTPUT.PUT_LINE('==========================================================');
+
+    FOR programme_rec IN programme_cursor LOOP
+        SELECT COUNT(PC.CourseCode), SUM(C.FeePerCH*C.CreditHour),SUM(C.CreditHour) INTO var_course_num, var_course_fee,var_credits
+        FROM ProgrammeCourse PC, Course C
+        WHERE PC.ProgrammeCode = In_Programme
+        AND PC.Semester = programme_rec.semester
+        AND PC.CourseCode = C.CourseCode;
+
+        DBMS_OUTPUT.PUT_LINE(to_char(programme_cursor%rowcount,'00')||'   '||RPAD(programme_rec.Semester,15,' ')||RPAD(var_course_num,15,' ')||RPAD(var_credits,12,' ')||RPAD(to_char(var_course_fee,'$99,999.00'),14,' '));
+
+        var_total_course := var_total_course + var_course_num;
+        var_total_credits:= var_total_credits + var_credits;
+        var_total_fees   := var_total_fees + var_course_fee;
+
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',18,' ')||RPAD('------',15,' ')||RPAD('------',13,' ')||'------------');
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',11,' ')||'Total : '||RPAD(var_total_course,15,' ')||RPAD(var_total_credits,12,' ')||to_char(var_total_fees,'$999,999.00'));
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',18,' ')||RPAD('------',15,' ')||RPAD('------',13,' ')||'------------');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',20,' ')||'End of Report');
+END;
+/
+
+Execute proc_details_report('DST');
+

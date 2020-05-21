@@ -1,0 +1,40 @@
+--Display
+set linesize 103
+set pagesize 500
+
+set verify off
+set sqlblanklines on
+
+--accept and prompts
+accept v_Program_Code char prompt 'Enter the Program Code > '
+
+--Column Format
+column Fee format $99,999.00
+column Semester format A8
+column programmecode format A14 heading "Programme Code"
+column programmename format A43 heading "Programe Name"
+column CourseType format A14 heading Type
+BREAK ON Semester ON ProgrammeCode ON ProgrammeName skip3;
+
+--title
+ttitle center ''&v_Program_Code' Program Course Details From Y1S1 to Y3S3' skip 3-
+
+--Compute
+COMPUTE AVG LABEL 'Average Course Fees :' -
+        SUM LABEL 'Current Semester Fees :' -
+        OF Fee on ProgrammeName;
+
+--Query
+SELECT PC.Semester, P.ProgrammeCode, P.ProgrammeName, PC.CourseCode,C.CourseType, (C.FeePerCH*C.Credithour) AS Fee
+FROM Programme P, ProgrammeCourse PC, Course C
+WHERE P.ProgrammeCode = PC.ProgrammeCode
+AND PC.COurseCode = C.CourseCode
+AND P.ProgrammeCode = '&v_Program_Code'
+ORDER BY PC.semester;
+
+
+--Clear
+ttitle off
+clear breaks
+clear column
+clear computes

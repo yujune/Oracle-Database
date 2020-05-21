@@ -1,0 +1,129 @@
+SET SERVEROUTPUT ON;
+
+CREATE OR REPLACE PROCEDURE PRC_INSERT_PROGRAM_COURSE( v_courseCode IN VARCHAR, 
+                                                       v_programCode IN CHAR, 
+                                                       v_semesterID IN VARCHAR,
+                                                       v_courseType IN VARCHAR,
+                                                       v_day IN VARCHAR,
+                                                       v_start_time IN VARCHAR,
+                                                       v_end_time IN VARCHAR) AS
+    
+    v_Sem                     ProgrammeCourse.Semester%TYPE;
+    v_time                    CourseSem.Time%TYPE;
+    SEMESTER_NOT_AVAILABLE    exception;
+    NUMERIC_TIME_ERROR        exception;
+    TIME_LOGIC_ERROR          exception;
+    MIN_TIME_ERROR            exception;
+      
+BEGIN
+
+    IF v_semesterID = 201705 THEN
+        v_Sem :='Y1S1';
+
+    ELSIF v_semesterID = 201709 THEN
+        v_Sem :='Y1S2';
+
+    ELSIF v_semesterID = 201703 THEN
+        v_Sem :='Y1S3';
+
+    ELSIF v_semesterID = 201805 THEN
+        v_Sem :='Y2S1';
+
+    ELSIF v_semesterID = 201809 THEN
+        v_Sem :='Y2S2';
+
+    ELSIF v_semesterID = 201803 THEN
+        v_Sem :='Y2S3';
+
+    ELSIF v_semesterID = 201905 THEN
+        v_Sem :='Y3S1';
+
+    ELSIF v_semesterID = 201909 THEN
+        v_Sem :='Y3S2';
+
+    ELSIF v_semesterID = 201903 THEN
+        v_Sem :='Y3S3';
+
+    ELSE 
+        RAISE SEMESTER_NOT_AVAILABLE;
+    END IF;
+
+    IF(is_number(v_start_time)=1) THEN
+
+        IF(is_number(v_end_time)=1) THEN
+
+            IF(v_end_time > v_start_time) THEN
+
+                IF((v_end_time - v_start_time) >= 100) THEN
+                    v_time := v_start_time||'-'||v_end_time;
+                ELSE
+                    RAISE MIN_TIME_ERROR;
+                END IF;
+
+            ELSE RAISE TIME_LOGIC_ERROR;
+
+            END IF;
+       
+        ELSE 
+            RAISE NUMERIC_TIME_ERROR;
+        END IF;
+    
+    ELSE
+        RAISE NUMERIC_TIME_ERROR;
+    END IF;
+
+
+    INSERT INTO CourseSem Values(CourseSem_Seq.NEXTVAL,v_courseCode,v_semesterID,v_courseType,v_day,v_time);
+    INSERT INTO ProgrammeCourse Values(v_programCode,v_courseCode,v_Sem);
+
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('New course: ' ||v_courseCode ||' successfully inserted into '||v_programCode||' program');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('========== Inserted Record ==========');
+    DBMS_OUTPUT.PUT_LINE('Semester ID : ' || v_semesterID);
+    DBMS_OUTPUT.PUT_LINE('Program     : ' || v_programCode);
+    DBMS_OUTPUT.PUT_LINE('Course      : ' || v_courseCode);
+    DBMS_OUTPUT.PUT_LINE('Day         : ' || v_day);
+    DBMS_OUTPUT.PUT_LINE('Time        : ' || v_time);
+
+    DBMS_OUTPUT.PUT_LINE('=====================================');
+    
+    
+    EXCEPTION
+        WHEN SEMESTER_NOT_AVAILABLE THEN
+            RAISE_APPLICATION_ERROR(-20000,v_semesterID||' Semester ID is not available ! ');
+
+        WHEN NUMERIC_TIME_ERROR THEN
+            RAISE_APPLICATION_ERROR(-20000,'Non-Numeric Time FOUND ! ');
+
+        WHEN TIME_LOGIC_ERROR THEN
+            RAISE_APPLICATION_ERROR(-20000,'End time must be later than Start time.');
+
+        WHEN MIN_TIME_ERROR THEN
+            RAISE_APPLICATION_ERROR(-20000,'Class must be at least 1 hour.');
+    
+END;
+/
+
+--SEMESTER_NOT_AVAILABLE
+Exec PRC_INSERT_PROGRAM_COURSE('AACS1473','RSD','201708','Lecture','Mon',1800,1930);
+
+--NUMERIC_TIME_ERROR
+Exec PRC_INSERT_PROGRAM_COURSE('AACS1473','RSD','201709','Lecture','Mon','six thirty',1930);
+
+--TIME_LOGIC_ERROR
+Exec PRC_INSERT_PROGRAM_COURSE('AACS1473','RSD','201705','Lecture','Mon',1900,1730);
+
+--MIN_TIME_ERROR
+Exec PRC_INSERT_PROGRAM_COURSE('AACS1473','RSD','201705','Lecture','Mon',1800,1830);
+
+--Successful
+Exec PRC_INSERT_PROGRAM_COURSE('AACS1473','RSD','201705','Lecture','Mon',1800,1930);
+
+--Delete from CourseSem
+--where CourseSemID = 888888;
+
+--Delete from ProgrammeCourse
+--where programmecode ='RSD' AND
+--coursecode ='AACS1473' AND 
+--semester ='Y1S1';

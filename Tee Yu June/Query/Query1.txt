@@ -1,0 +1,38 @@
+--set sql size
+set linesize 108
+set pagesize 150
+set verify off
+set sqlblanklines on
+
+
+--accept and prompts
+accept firstYear NUMBER prompt 'Enter 1st Year >'
+accept secondYear NUMBER prompt 'Enter 2nd Year >'
+
+
+--set the column format
+column ProgrammeCode format A14 heading 'Program Code'
+column ProgrammeName format A50 heading 'Program Name'
+column FirstYear format A22 heading '&firstYear'
+column SecondYear format A22 heading '&secondYear' 
+column Differences format A15 heading 'Differences(%)'
+
+column FirstYear format 9999
+column SecondYear format 9999
+column Differences format 99.99
+
+--set title 
+ttitle center 'Total Intake Number of Students for each Program in '&firstYear','&secondYear''  skip 3-
+
+
+SELECT P.ProgrammeCode, P.ProgrammeName, VL.StudNUm AS FirstYear, VP.StudNUm AS SecondYear, ROUND(((VP.StudNUm-VL.StudNUm)/VP.StudNUm)*100,2) AS Differences
+FROM Programme P, VIEW_LearnerProgramme VL, VIEW_LearnerProgramme VP
+WHERE P.ProgrammeCode = VL.ProgrammeCode
+AND VP.ProgrammeCode = P.ProgrammeCode
+AND EXTRACT(YEAR FROM VL.ENROLMENTDATE) = '&firstYear'
+AND EXTRACT(YEAR FROM VP.ENROLMENTDATE) = '&secondYear' 
+ORDER BY Differences DESC;
+
+--Clear format
+ttitle off
+clear column

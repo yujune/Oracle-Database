@@ -1,0 +1,104 @@
+Set Serveroutput ON;
+Set Linesize 120;
+Set PageSize 500;
+
+CREATE OR REPLACE PROCEDURE proc_summaryReport AS
+
+var_CourseNumber        NUMBER(5,2);
+var_CreditHour          NUMBER(3);
+var_ProgramFee          NUMBER(8,2);
+var_Total_Courses       NUMBER(6,2):=0;
+var_Total_Credits       NUMBER(4):=0;
+var_Total_Fees          NUMBER(10,2):=0;
+var_Students            NUMBER(5,2);
+var_Total_Students      NUMBER(6,2):=0;
+var_Highest_Course      NUMBER(2):=0;
+var_Lowest_Course       NUMBER(2):=99;
+var_Highest_students    NUMBER(3):=0;
+var_Lowest_students     NUMBER(3):=999;
+var_Highest_Course_Pro  Programme.ProgrammeCode%TYPE;
+var_Lowest_Course_Pro   Programme.ProgrammeCode%TYPE;
+var_Highest_Student_Pro Programme.ProgrammeCode%TYPE;
+var_Lowest_Student_Pro  Programme.ProgrammeCode%TYPE;
+var_avg_Course          NUMBER(5,2);
+var_avg_Student         NUMBER(5,2);
+var_avg_ProgrammeFee    NUMBER(10,2):=0;
+var_loop_num            NUMBER(2):=0;
+
+CURSOR program_cursor IS
+    SELECT ProgrammeCode, ProgrammeName
+    FROM Programme;
+
+program_rec program_cursor%ROWTYPE;
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',25,' ')||'Total Programme Course And Students Summary Report');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: '||To_Char(sysdate,'dd-mm-yyyy'),95,' ')||'Page: 1');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('=========================================================================================================');
+    DBMS_OUTPUT.PUT_LINE('NO '||'Program Code'||RPAD(' Program Name',46,' ')||'Total Courses  '||'Total Students  '||'Programme Fee');
+    DBMS_OUTPUT.PUT_LINE('=========================================================================================================');
+    
+    FOR program_rec IN program_cursor LOOP
+        var_loop_num := var_loop_num+1;
+
+        SELECT COUNT(PC.CourseCode),  SUM(CreditHour), SUM(C.FeePerCH * CreditHour)
+               INTO var_CourseNumber,var_CreditHour, var_ProgramFee
+        FROM ProgrammeCourse PC, Course C
+        WHERE PC.CourseCode = C.CourseCode
+        AND PC.ProgrammeCode = program_rec.ProgrammeCode;
+
+        SELECT COUNT(LearnerID) INTO var_Students
+        FROM learnerProgramme
+        WHERE ProgrammeCode = program_rec.ProgrammeCode;
+
+        IF (var_CourseNumber > var_Highest_Course) THEN
+            var_Highest_Course := var_CourseNumber;
+            var_Highest_Course_Pro := program_rec.ProgrammeCode;
+
+        ELSIF (var_CourseNumber < var_Lowest_Course) THEN
+            var_Lowest_Course := var_CourseNumber;
+            var_Lowest_Course_Pro := program_rec.ProgrammeCode;
+        END IF;
+
+        IF (var_Students > var_Highest_students) THEN
+            var_Highest_students := var_Students;
+            var_Highest_Student_Pro := program_rec.ProgrammeCode;
+
+        ELSIF (var_Students < var_Lowest_Course) THEN
+            var_Lowest_students := var_Students;
+            var_Lowest_Student_Pro := program_rec.ProgrammeCode;
+        END IF;
+
+        DBMS_OUTPUT.PUT_LINE(to_char(program_cursor%rowcount,'00')||'  '||RPAD(program_rec.ProgrammeCode,13,' ')||RPAD(program_rec.ProgrammeName,46,' ')||RPAD(to_char(var_CourseNumber,'999'),14,' ')||RPAD(to_char(var_Students,'999'),14,' ')||RPAD(to_char(var_ProgramFee,'$999,999.99'),14,' '));
+    
+    var_Total_Courses := var_Total_Courses + var_CourseNumber;
+    var_Total_Students := var_Total_Students + var_Students;
+    var_Total_Fees    := var_Total_Fees    + var_ProgramFee;   
+
+    END LOOP; 
+    var_avg_Course := var_Total_Courses/var_loop_num;
+    var_avg_Student:= var_Total_Students/var_loop_num;
+    var_avg_ProgrammeFee := var_Total_Fees/var_loop_num;
+
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',58)||'     '||'---------- '||' -----------'||'    --------------');
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',54,' ')||'TOTAL   :'||RPAD(to_char(var_Total_Courses,'999.99'),13,' ') ||' '||RPAD(to_char(var_Total_Students,'999.99'),14,' ')||RPAD(to_char(var_Total_Fees,'$999,999.99'),14,' '));  
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',54,' ')||'AVERAGE :  '||RPAD(var_avg_Course,13,' ') ||' '||RPAD(var_avg_Student,12,' ')||RPAD(to_char(var_avg_ProgrammeFee,'$999,999.99'),14,' '));      
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',58)||'     '||'---------- '||' -----------'||'    --------------');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('Highest Number of Courses  : '||RPAD(var_Highest_Course,15,' ')||'Programme Code: '||var_Highest_Course_Pro);
+    DBMS_OUTPUT.PUT_LINE('Lowest Number of Courses   : '||RPAD(var_Lowest_Course,15,' ')||'Programme Code: '||var_Lowest_Course_Pro);
+    DBMS_OUTPUT.PUT_LINE('Highest Number of Students : '||RPAD(var_Highest_students,15,' ')||'Programme Code: '||var_Highest_Student_Pro);
+    DBMS_OUTPUT.PUT_LINE('Lowest Number of Students  : '||RPAD(var_Lowest_students,15,' ')||'Programme Code: '||var_Lowest_Student_Pro);
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',45)||'End of Report');
+
+END;
+/
+
+
+Execute proc_summaryReport;
+

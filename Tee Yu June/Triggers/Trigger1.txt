@@ -1,0 +1,106 @@
+alter table ProgrammeCourse disable all triggers;
+
+--alter table programme
+--drop column programmefee;
+
+alter table Programme
+add programmefee number(8,2) default 0;
+
+update programme
+set TotalCreditHours=0,
+    programmefee = 0;
+
+delete from programmecourse;
+
+CREATE OR REPLACE TRIGGER TRG_UPT_PROGRAM_FEE
+AFTER INSERT OR
+      DELETE ON ProgrammeCourse
+
+FOR EACH ROW
+DECLARE
+
+    v_courseFee         Course.CourseFee%TYPE;
+    v_creditHours       Programme.TotalCreditHours%TYPE;
+
+BEGIN
+
+    CASE
+        
+        WHEN INSERTING THEN
+
+            SELECT (FeePerCh * CreditHour), CreditHour into v_courseFee, v_creditHours
+            FROM Course
+            WHERE CourseCode = :new.CourseCode;
+
+            IF SQL%FOUND THEN
+
+                UPDATE Programme
+                SET ProgrammeFee = ProgrammeFee + v_courseFee,
+                    TotalCreditHours = TotalCreditHours + v_creditHours
+                WHERE ProgrammeCode = :new.ProgrammeCode;
+
+            END IF;
+
+        WHEN DELETING THEN
+
+            SELECT (FeePerCh * CreditHour), CreditHour into v_courseFee, v_creditHours
+            FROM Course
+            WHERE CourseCode = :old.CourseCode;
+
+            IF SQL%FOUND THEN 
+
+                UPDATE Programme
+                SET ProgrammeFee = ProgrammeFee - v_courseFee,
+                    TotalCreditHours = TotalCreditHours - v_creditHours
+                WHERE ProgrammeCode = :old.ProgrammeCode;
+
+            END IF;
+
+    END CASE;
+
+    EXCEPTION
+        WHEN NO_DATA_FOUND THEN
+            RAISE_APPLICATION_ERROR(-20000,'No Data Found! Try Again!');
+        
+        WHEN OTHERS THEN
+            RAISE_APPLICATION_ERROR(-20000,'ERROR 404');
+
+END;
+/
+
+
+alter table Course enable all triggers;
+
+set linesize 500
+set pagesize 500
+ttitle off
+clear breaks
+clear column
+clear computes
+
+--format
+column ProgrammeCode format A14 heading 'Program Code'
+column ProgrammeName format A50 heading 'Program Name'
+column TotalCredits format A13 heading 'Total Credits'
+column programmeFee format A14 heading 'Program Fees'
+column programmeFee format $999,999.99
+column TotalCourses format 9999
+column TotalCredits format 9999
+
+SELECT programmeCode, programmeName, totalCreditHours, programmeFee 
+FROM programme;
+
+@C:\Users\ASUS\Desktop\in_07_ProgrammeCourse.txt
+
+DELETE from programmeCourse
+where programmeCode ='RSD' AND
+courseCode ='BACS2173';
+
+SELECT programmeCode,programmeName, totalCreditHours, programmeFee 
+FROM programme;
+
+--clear
+ttitle off
+clear breaks
+clear column
+clear computes

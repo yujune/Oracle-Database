@@ -1,0 +1,67 @@
+Set Serveroutput ON;
+Set Linesize 120;
+Set PageSize 500;
+set sqlblanklines on
+
+CREATE OR REPLACE PROCEDURE proc_onDemandReport(In_Year1 IN NUMBER, In_Year2 IN NUMBER)AS
+
+var_LearnerNumber1   NUMBER(3);
+var_LearnerNumber2   NUMBER(3);
+var_TotalLearner1    NUMBER(3):=0;
+var_TotalLearner2    NUMBER(3):=0;
+var_dif_in_Percentage NUMBER(5,2);
+var_difTotal_in_Percentage NUMBER(5,2);
+var_avg_firstyear    NUMBER(2);
+var_avg_secondyear   NUMBER(2);
+var_count            NUMBER(2):=0;
+var_total_differences NUMBER(5,2):=0;
+var_avg_differences NUMBER(5,2);
+
+CURSOR pro_cursor IS
+
+    SELECT P.ProgrammeCode AS ProgrammeCode, P.ProgrammeName AS ProgrammeName, VL.StudNUm AS var_LearnerNumber1, VP.StudNUm AS var_LearnerNumber2, ROUND(((VP.StudNUm-VL.StudNUm)/VP.StudNUm)*100,2) AS var_dif_in_Percentage
+    FROM Programme P, VIEW_LearnerProgramme VL, VIEW_LearnerProgramme VP
+    WHERE P.ProgrammeCode = VL.ProgrammeCode
+    AND VP.ProgrammeCode = P.ProgrammeCode
+    AND EXTRACT(YEAR FROM VL.ENROLMENTDATE) = In_Year1
+    AND EXTRACT(YEAR FROM VP.ENROLMENTDATE) = In_Year2
+    ORDER BY var_dif_in_Percentage DESC;
+
+pro_rec pro_cursor%ROWTYPE;
+
+BEGIN
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',30)||'Yearly Total Program Students On Demand Report');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('Printed Date: '||To_Char(sysdate,'dd-mm-yyyy'),95,' ')||'Page: 1');
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('======================================================================================================');
+    DBMS_OUTPUT.PUT_LINE('NO '||'Program Code'||RPAD(' Program Name',47,' ')||RPAD(In_Year1,14,' ')||RPAD(In_Year2,12,' ')||RPAD('Differences(%)',15,' '));
+    DBMS_OUTPUT.PUT_LINE('======================================================================================================');
+    
+    FOR pro_rec IN pro_cursor LOOP
+
+        var_TotalLearner1 := var_TotalLearner1 + pro_rec.var_LearnerNumber1;
+        var_TotalLearner2 := var_TotalLearner2 + pro_rec.var_LearnerNumber2;
+        var_total_differences := var_total_differences + var_dif_in_Percentage;
+
+        DBMS_OUTPUT.PUT_LINE(to_char(pro_cursor%rowcount,'00')||'  '||RPAD(pro_rec.ProgrammeCode,13,' ')||RPAD(pro_rec.ProgrammeName,44,' ')||RPAD(to_char(pro_rec.var_LearnerNumber1,'999'),14,' ')||RPAD(to_char(pro_rec.var_LearnerNumber2,'999'),14,' ')||to_char(pro_rec.var_dif_in_Percentage,'999.99')||'%');
+        var_count:=var_count+1;
+    END LOOP; 
+
+    var_difTotal_in_Percentage := ((var_TotalLearner2-var_TotalLearner1)/var_TotalLearner2)*100;
+    var_avg_firstyear := var_TotalLearner1/var_count;
+    var_avg_secondyear := var_TotalLearner2/var_count;
+    var_avg_differences := ((var_avg_secondyear-var_avg_firstyear)/var_avg_secondyear)*100;
+
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',55)||'     '||'---------- '||' --------------'||'  --------------');
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',50)||'TOTAL  :    '||RPAD(var_TotalLearner1,14,' ') ||RPAD(var_TotalLearner2,15,' ')||var_difTotal_in_Percentage||'%');  
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',50)||'AVG    :     '||RPAD(var_avg_firstyear,14,' ') ||RPAD(var_avg_secondyear,14,' ')||var_avg_differences||'%');  
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',55)||'     '||'---------- '||' --------------'||'  --------------'); 
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE(RPAD('--',45)||'End of Report');
+END;
+/
+
+
+Execute proc_onDemandReport(2018,2019);

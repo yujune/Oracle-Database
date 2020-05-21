@@ -1,0 +1,37 @@
+SET linesize 112
+SET pagesize 160
+set verify off
+set sqlblanklines on
+
+--format column
+column ProgrammeCode format A10 heading 'Code'
+column ProgrammeName format A44 heading 'Program Name'
+column TotalCourses format A13 heading 'Total Courses'
+column TotalCredits format A13 heading 'Total Credits'
+column Students format A15 heading 'Total Students'
+column FEE format A14 heading 'Program Fees'
+column FEE format $999,999.99
+column TotalCourses format 9999
+column TotalCredits format 9999
+column Students format 999
+
+--set title 
+ttitle center 'Relationship Between Programs Details And Total Students Enrolled'  skip 3-
+
+
+SELECT P.ProgrammeCode, P.ProgrammeName, COUNT(C.CourseCode) AS TotalCourses, 
+SUM(C.CreditHour) AS TotalCredits,
+SUM(C.FeePerCH * C.CreditHour) AS FEE,
+(SELECT COUNT(LP.LearnerID) 
+FROM LearnerProgramme LP 
+WHERE LP.ProgrammeCode=P.ProgrammeCode) AS Students
+FROM Course C, ProgrammeCourse PC, Programme P
+WHERE P.ProgrammeCode = PC.ProgrammeCode
+AND PC.CourseCode = C.CourseCode
+GROUP BY P.ProgrammeCode, P.ProgrammeName
+ORDER BY 4 DESC;
+
+
+--clear
+ttitle off
+clear column 

@@ -1,0 +1,4 @@
+CREATE OR REPLACE VIEW VIEW_LearnerProgramme AS
+SELECT ProgrammeCode,EnrolmentDate, COUNT(LearnerID) AS StudNUm
+FROM LearnerProgramme
+GROUP BY ProgrammeCode,EnrolmentDate;
