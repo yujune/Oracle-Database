@@ -1,0 +1,54 @@
+--Add Learner enrolment
+--5 more students in RSF 2019
+INSERT INTO LearnerProgramme VALUES ('1702011','RSF','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702012','RSF','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702013','RSF','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702014','RSF','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702015','RSF','02-Mar-19',1);
+
+--10 more students in RIS 2019
+INSERT INTO LearnerProgramme VALUES ('1702016','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702017','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702023','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702024','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702025','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702026','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702027','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702028','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702029','RIS','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702030','RIS','02-Mar-19',1);
+
+--2 more students in RIT 2019
+INSERT INTO LearnerProgramme VALUES ('1702018','RIT','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702019','RIT','02-Mar-19',1);
+
+--3 more students in REI 2019
+INSERT INTO LearnerProgramme VALUES ('1702020','REI','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702021','REI','02-Mar-19',1);
+INSERT INTO LearnerProgramme VALUES ('1702022','REI','02-Mar-19',1);
+
+--1 more students in DIT 2019 
+INSERT INTO LearnerProgramme VALUES ('1702001','DIT','02-Mar-19',1);
+
+
+--Add number of course in a programme
+--Add 5 more course in DIT
+INSERT INTO ProgrammeCourse VALUES ('DIT','BACS2003','Y1S1');
+INSERT INTO ProgrammeCourse VALUES ('DIT','BAIT3094','Y1S2');
+INSERT INTO ProgrammeCourse VALUES ('DIT','BACS2224','Y1S3');
+INSERT INTO ProgrammeCourse VALUES ('DIT','BACS1033','Y2S1');
+INSERT INTO ProgrammeCourse VALUES ('DIT','BAIT3095','Y2S1');
+
+--Add 3 more course to DST
+INSERT INTO ProgrammeCourse VALUES ('DST','BACS2003','Y1S1');
+INSERT INTO ProgrammeCourse VALUES ('DST','BAIT3094','Y1S2');
+INSERT INTO ProgrammeCourse VALUES ('DST','BACS2224','Y1S3');
+
+--Add 2 more course to RIS
+INSERT INTO ProgrammeCourse VALUES ('RIS','AACS2303','Y1S1');
+INSERT INTO ProgrammeCourse VALUES ('RIS','AACS1143','Y1S2');
+
+
+
+
+
