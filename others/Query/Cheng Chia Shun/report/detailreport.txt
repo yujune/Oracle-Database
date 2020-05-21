@@ -1,0 +1,31 @@
+create or replace procedure summary_topic(v_topic in number)
+as cursor prod_cursor is 
+      select * from topic 
+      where topicid=v_topic;
+   prod_rec prod_cursor%rowtype;
+   v_staff topic.staffnumber%type;
+
+begin
+   Select staffnumber into v_staff
+   from topic
+   where topicid =v_topic;
+    DBMS_OUTPUT.PUT_LINE('-------------------Detail Report of Topic--------------------');
+
+	DBMS_OUTPUT.PUT_LINE('Topic ID : '||v_topic);
+ 	DBMS_OUTPUT.PUT_LINE('Staff ID:'||v_staff);
+       
+       DBMS_OUTPUT.PUT_LINE(RPAD('No',5)||RPAD('Course semester ID',25)||RPAD('Title',15)||
+				  RPAD('Topic Detail',40)||'Date');
+       DBMS_OUTPUT.PUT_LINE('==== '||'=================='||'  =================='||
+			'  =================================='||'  ==========');
+       FOR Prod_rec IN Prod_cursor LOOP
+      
+      DBMS_OUTPUT.PUT_LINE(RPAD(TO_CHAR(prod_cursor%rowcount),5)||RPAD(Prod_rec.coursesemid,20)
+                           ||RPAD(Prod_rec.title,25)||RPAD(Prod_rec.topicdetails,30)
+			||to_date(Prod_rec.topicdate,'dd/mm/yyyy'));
+
+
+end loop;
+end;
+/
+exec summary_topic('100')

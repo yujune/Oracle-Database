@@ -1,0 +1,19 @@
+create or replace procedure prc_staff_retire(v_staffname in varchar)
+is
+  v_stafftitle varchar2(20);
+
+begin
+   Select stafftitle into v_stafftitle
+   from staff
+   where staffname=v_staffname;
+   v_stafftitle :='retired';
+update staff
+   set stafftitle=v_stafftitle
+   where upper('staffname')=upper('v_staffname');
+DBMS_OUTPUT.PUT_LINE(RPAD('Staff Name',25)|| 'Stafftitle');
+DBMS_OUTPUT.PUT_LINE('====================== '|| '===============');
+DBMS_OUTPUT.PUT_LINE(RPAD(v_staffname,25)||v_stafftitle);
+end;
+/
+
+exec prc_staff_retire('Ts. Lim Mei Shyan');

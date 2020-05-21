@@ -1,0 +1,45 @@
+-- This Procedure Will Print The Staff TimeTable In This Semester
+
+CREATE OR REPLACE PROCEDURE prc_staff_timetable(v_staffNumber IN NUMBER DEFAULT 90078, v_semID IN NUMBER DEFAULT 201909) AS
+   tt_cursor SYS_REFCURSOR;
+
+   v_staffName  VARCHAR(40);
+ 
+  BEGIN
+    SELECT S.StaffName INTO v_staffName
+    FROM Staff S, AssignStaff AsS, CourseSem CS
+    WHERE S.StaffNumber = v_staffNumber AND S.StaffNumber = AsS.StaffNumber AND AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID = 201909
+    GROUP BY S.StaffName;
+
+    OPEN tt_cursor FOR
+       SELECT * FROM (
+          SELECT CS.Day, CS.Time, CS.CourseCode||' '||SUBSTR(CS.CourseSemType,1,1) CourseCode
+          FROM AssignStaff AsS, CourseSem CS
+          WHERE AsS.StaffNumber = v_staffNumber AND AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID = 201909
+          ORDER BY 
+            CASE
+               WHEN Day = 'Mon' THEN 1
+               WHEN Day = 'Tue' THEN 2
+               WHEN Day = 'Wed' THEN 3
+               WHEN Day = 'Thu' THEN 4
+               WHEN Day = 'Fri' THEN 5
+               ELSE 6
+            END, TIME )
+       PIVOT(LISTAGG(chr(10)||Time||' '||CourseCode||chr(10),chr(10)) within group (order by Time) Times 
+             FOR Day IN ('' No1,'Mon' Mon,'Tue' Tue,'Wed' Wed,'Thu' Thu,'Fri' Fri, '' No))
+       ORDER BY Mon_Times,Tue_Times,Wed_Times,Thu_Times,Fri_Times;
+
+    DBMS_OUTPUT.PUT_LINE(chr(10)||'*'||LPAD('Weekly Time Table For Academic Staff In Semester '||v_semID,87,chr(32)));
+    DBMS_OUTPUT.PUT_LINE('*'||LPAD('=======================================================',87,chr(32)));
+    DBMS_OUTPUT.PUT_LINE(' ');
+    DBMS_OUTPUT.PUT_LINE('*'||LPAD('Staff Number: '||v_staffNumber||'     | ',58,' ')||' '||RPAD('Staff Name: '||v_staffName,60,' '));
+
+    DBMS_SQL.RETURN_RESULT(tt_cursor);
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+
+  EXCEPTION
+     WHEN NO_DATA_FOUND THEN
+        DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('Staff ',31,' ')||v_staffNumber||' Are Not Assigned To Any Classes For Semester '||v_semID||'.');
+        DBMS_OUTPUT.PUT_LINE(chr(10));
+  END;
+/

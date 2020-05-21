@@ -1,0 +1,5 @@
+column object_name format A25
+break on object_type Skip 1 on object_type
+select object_type, object_name from user_objects where object_name not like 'SYS_%' order by 1, 2;
+clear column
+clear break

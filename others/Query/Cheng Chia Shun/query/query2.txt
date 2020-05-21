@@ -1,0 +1,5 @@
+select s.staffname,s.stafftitle,t.topicdate,t.title
+from staff s,assignstaff a,topic t
+where s.staffnumber=a.staffnumber and
+a.coursesemid=t.coursesemid
+and t.title like '%Software%';

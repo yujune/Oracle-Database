@@ -1,0 +1,24 @@
+
+set linesize 120
+set pagesize 50
+set feedback off
+set colsep " * "
+set recsep each
+set recsepchar "-"
+COLUMN Mon_Times HEADING "--------------------||       Monday" FORMAT A20
+COLUMN Tue_Times HEADING "--------------------||      Tuesday" FORMAT A20
+COLUMN Wed_Times HEADING "--------------------||     Wednesday" FORMAT A20
+COLUMN Thu_Times HEADING "--------------------||      Thursday" FORMAT A20
+COLUMN Fri_Times HEADING "--------------------||       Friday" FORMAT A20
+COLUMN No1_Times HEADING "-||" FORMAT A1
+COLUMN No_Times HEADING "-||" FORMAT A1
+
+
+EXEC prc_staff_timetable(90078);
+EXEC prc_staff_timetable(90050);
+
+
+CLEAR COLUMN
+set recsep off
+set colsep " "
+set feedback on

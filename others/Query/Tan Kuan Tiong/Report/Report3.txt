@@ -1,0 +1,72 @@
+CREATE OR REPLACE PROCEDURE prc_print_ec_report(v_y1 IN NUMBER DEFAULT 2018,
+                                                v_y2 IN NUMBER DEFAULT 2019) AS
+    v_regnum   NUMBER(4) := 0;
+    v_ccode    VARCHAR(8);
+    v_count    NUMBER(2) := 0;
+    v_csem_low NUMBER(2) := 0;
+    v_low_reg  NUMBER(6,2) := 0;
+    v_low_fee  NUMBER(9,2) := 0;
+    v_csem_all NUMBER(2) := 0;
+    v_all_reg  NUMBER(6,2) := 0;
+    v_all_fee  NUMBER(9,2) := 0;
+
+    CURSOR  csem_cursor  IS
+       SELECT C.CourseCode, C.CourseName, COUNT(CSD.CourseSemID) as RegNum, 
+              COUNT(CSD.COURSESEMID) * C.FeePerCH * C.CreditHour as FeeReceive
+       FROM Course C LEFT OUTER JOIN
+            ( SELECT CD.CourseSemID, CS.CourseCode 
+              FROM CourseDetail CD, CourseSem CS 
+              WHERE CD.CourseSemID = CS.CourseSemID AND 
+                    CS.SemesterID IN (201803, 201805, 201809, 201903, 201905, 201909)) CSD
+       ON C.CourseCode = CSD.CourseCode 
+       WHERE C.CourseType = 'Elective'
+       GROUP BY C.CourseCode, C.CourseName, C.FeePerCH, C.CreditHour
+       ORDER BY 3, 1;
+
+    csem_rec  csem_cursor%ROWTYPE;
+
+ BEGIN
+    DBMS_OUTPUT.PUT_LINE(chr(10)||'Summary Report On Elective Course With Low Student Commitment In Academic Year 2018 And 2019');
+    DBMS_OUTPUT.PUT_LINE('============================================================================================');
+
+    DBMS_OUTPUT.PUT_LINE('No.'||'  '||'Course Code'||'  '||RPAD('Course Name',40,' ')||'No. Of Register'||'  '||'Fees Received(RM)');
+    DBMS_OUTPUT.PUT_LINE('---'||'  '||'-----------'||'  '||RPAD('-',38,'-')||'  '||'---------------'||'  '||'-----------------');
+
+    FOR csem_rec IN csem_cursor
+    LOOP
+       IF csem_rec.RegNum < 100 THEN
+          v_count := v_count + 1;
+          DBMS_OUTPUT.PUT_LINE(to_char(v_count,'00')||'  '||
+                               LPAD(csem_rec.CourseCode,10,' ')||'    '||
+                               RPAD(csem_rec.CourseName,40,' ')||
+                               LPAD(csem_rec.RegNum,15,' ')||'  '||
+                               LPAD(to_char(csem_rec.FeeReceive,'999,990.00'),17,' '));
+
+          v_csem_low := v_csem_low + 1;
+          v_low_reg := v_low_reg + csem_rec.RegNum;
+          v_low_fee := v_low_fee + csem_rec.FeeReceive;
+       END IF;
+       v_csem_all := v_csem_all + 1;
+       v_all_reg := v_all_reg + csem_rec.RegNum;
+       v_all_fee := v_all_fee + csem_rec.FeeReceive;
+    END LOOP;
+
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('Expected Outcome For Elective Course');
+    DBMS_OUTPUT.PUT_LINE('====================================');
+    DBMS_OUTPUT.PUT_LINE('Number Of Student''s Registrations : '||ROUND(v_all_reg/v_csem_all,0));
+    DBMS_OUTPUT.PUT_LINE('Total Of Fees Received For Course : RM'||to_char(ROUND(v_all_fee/v_csem_all,0),'999,999.00'));
+    DBMS_OUTPUT.PUT_LINE(chr(10));
+    DBMS_OUTPUT.PUT_LINE('Average Outcome Of Elective Course With Low Student Commitment');
+    DBMS_OUTPUT.PUT_LINE('==============================================================');
+    DBMS_OUTPUT.PUT_LINE('Number Of Student''s Registrations : '||ROUND(v_low_reg/v_csem_low,0));
+    DBMS_OUTPUT.PUT_LINE('Total Of Fees Received For Course : RM'||to_char(ROUND(v_low_fee/v_csem_low,0),'999,999.00'));
+    DBMS_OUTPUT.PUT_LINE('Possible Revenue Lost Per Course  : RM'||to_char(ROUND((v_all_fee/v_csem_all)-(v_low_fee/v_csem_low),0),'999,999.00'));
+    DBMS_OUTPUT.PUT_LINE(LPAD('END OF REPORT',46,'-')||RPAD('-',33,'-'));
+
+ END;
+/
+
+set linesize 102
+
+EXEC prc_print_ec_report;

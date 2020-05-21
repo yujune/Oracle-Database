@@ -1,0 +1,26 @@
+create or replace procedure dmd_mark(v_assessmentid in number,v_mark in number)
+as  
+   cursor prod_cursor is 
+      select * from assessment
+      where assessmentid=v_assessmentid;
+   prod_rec prod_cursor%rowtype;
+
+begin 
+    
+   DBMS_OUTPUT.PUT_LINE('-------------------On Demand Report of Passing Mark--------------------');
+   DBMS_OUTPUT.PUT_LINE(RPAD('No',5)||'Assessment ID'||' Original Passing Mark');
+   DBMS_OUTPUT.PUT_LINE('=== '||'============='||' ====================');
+
+for prod_rec in prod_cursor loop
+
+      DBMS_OUTPUT.PUT_LINE(RPAD(TO_CHAR(prod_cursor%rowcount),5)||RPAD(v_assessmentid,15)||
+      			   (prod_rec.passingmark));
+    prod_rec.passingmark:=v_mark;
+   DBMS_OUTPUT.PUT_LINE(RPAD('No',5)||'Assessment ID'||' Updated Passing Mark');
+   DBMS_OUTPUT.PUT_LINE('=== '||'============='||' ====================');
+      DBMS_OUTPUT.PUT_LINE(RPAD(TO_CHAR(prod_cursor%rowcount),5)||
+			RPAD(v_assessmentid,15)||prod_rec.passingmark);
+end loop;
+end;
+/
+exec dmd_mark(10001,10);

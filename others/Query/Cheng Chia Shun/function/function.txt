@@ -1,0 +1,8 @@
+create or replace function goodbye_msg(p_name in varchar)
+return varchar
+is
+begin
+return('goodbye '||p_name||' see you next time');
+end;
+/
+select goodbye_msg('a') fromd dual;

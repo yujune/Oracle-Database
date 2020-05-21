@@ -1,0 +1,49 @@
+
+set linesize 73
+set pagesize 21
+
+-- INSERT INTO Course VALUES ('BBBB1111','New Course 1','Elective','This is new course one',250.00,3,750.00);
+
+-- Elective Course with Less Learner Commitment Over 2 Academic Year
+
+TTITLE SKIP 1 CENTER 'Elective Course with Less Learner Commitment Over 2 Academic Year' SKIP 1 CENTER               '=================================================================' SKIP 1 ' '
+
+BREAK ON REPORT
+COMPUTE AVG LABEL 'Average Of Fees Received(RM):' OF PossibleIncome ON REPORT
+
+COLUMN CourseCode HEADING 'Course|Code' FORMAT A8
+COLUMN CourseName HEADING 'Course Name' FORMAT A40
+COLUMN RegNum HEADING 'No. of|Students' FORMAT 9,999
+COLUMN PossibleIncome HEADING 'Course Fee|Received (RM)' FORMAT 9,999,990.99
+
+SELECT C.CourseCode, C.CourseName, COUNT(CSD.CourseSemID) as RegNum, COUNT(CSD.COURSESEMID) * C.FeePerCH * C.CreditHour as PossibleIncome
+FROM Course C LEFT OUTER JOIN
+     (SELECT CD.CourseSemID, CS.CourseCode 
+      FROM CourseDetail CD, CourseSem CS 
+      WHERE CD.CourseSemID = CS.CourseSemID AND CS.SemesterID IN (201803, 201805, 201809, 201903, 201905, 201909)) CSD
+ON C.CourseCode = CSD.CourseCode 
+WHERE C.CourseType = 'Elective'
+GROUP BY C.CourseCode, C.CourseName, C.FeePerCH, C.CreditHour
+HAVING COUNT(CSD.CourseSemID) < 100
+ORDER BY 3, 1;
+
+
+-- Elective Course with Great Learner Commitment Over 2 Academic Year
+
+TTITLE SKIP 1 CENTER 'Elective Course with Great Learner Commitment Over 2 Academic Year' SKIP 1 CENTER               '==================================================================' SKIP 1 ' '
+
+SELECT C.CourseCode, C.CourseName, COUNT(CSD.CourseSemID) as RegNum, COUNT(CSD.COURSESEMID) * C.FeePerCH * C.CreditHour as PossibleIncome
+FROM Course C LEFT OUTER JOIN
+     (SELECT CD.CourseSemID, CS.CourseCode 
+      FROM CourseDetail CD, CourseSem CS 
+      WHERE CD.CourseSemID = CS.CourseSemID AND CS.SemesterID IN (201803, 201805, 201809, 201903, 201905, 201909)) CSD
+ON C.CourseCode = CSD.CourseCode 
+WHERE C.CourseType = 'Elective'
+GROUP BY C.CourseCode, C.CourseName, C.FeePerCH, C.CreditHour
+HAVING COUNT(CSD.CourseSemID) > 150
+ORDER BY 3 DESC, 1;
+
+CLEAR COLUMN
+CLEAR BREAK
+CLEAR COMPUTE
+TTITLE OFF

@@ -1,0 +1,102 @@
+-- Show The Total Number Of Staff, Course Sem Teached In Two Academic Years (preferably 2018, 2019) And Average Weekly Teaching Hours Based On the Department And Their Increase In Ratio.
+
+set linesize 108
+SET VERIFY OFF
+
+PROMPT
+PROMPT This Query Will Show The Average Staff Workload Details In 2 Academic Years.
+PROMPT Please Enter 2 Academic Years To Proceed.
+PROMPT
+ACCEPT v_year1 NUMBER FORMAT 9999 PROMPT 'Enter First Year > '
+ACCEPT v_year2 NUMBER FORMAT 9999 PROMPT 'Enter Second Year > '
+PROMPT 
+PROMPT _                 Average Academic Staff WorkLoad For Each Department In 2 Academic Years
+PROMPT _                 =======================================================================
+COLUMN Department FORMAT A38
+COLUMN noStaff HEADING "Total|Staff" FORMAT 999
+COLUMN Y1TC HEADING "Total|Class" FORMAT 999
+COLUMN Y1TH HEADING "Total|Hours" FORMAT 9,999
+COLUMN Y1AH HEADING "Average Hours" FORMAT 999.99
+COLUMN Y2TC HEADING "Total|Class" FORMAT 999
+COLUMN Y2TH HEADING "Total|Hours" FORMAT 9,999
+COLUMN Y2AH HEADING "Average Hours" FORMAT 999.99
+COLUMN IncreaseRatio HEADING "Increase|Ratio (%)"
+
+
+TTITLE LEFT '               Department Details                  Year &v_year1           Year &v_year2              ' SKIP 1 LEFT '============================================  ========================   ========================  ========='
+
+SELECT S.Department, cal_staff_by_dprt(S.Department) noStaff, Y1.TotalClass Y1TC, Y1.TotalHr Y1TH, Y1.AvgHr Y1AH, 
+       Y2.TotalClass Y2TC, Y2.TotalHr Y2TH, Y2.AvgHr Y2AH, 
+       to_char((Y2.AvgHr-Y1.AvgHr)/Y1.AvgHr*100,'990.99')||' %' IncreaseRatio
+FROM Staff S, 
+     (SELECT S.Department, 
+             COUNT(AsS.CourseSemID) TotalClass, 
+             SUM(cal_weekly_class_hr(CS.CourseSemType)) TotalHr, 
+             SUM(cal_weekly_class_hr(CS.CourseSemType))/cal_staff_by_dprt(S.Department) AvgHr
+      FROM  Staff S, AssignStaff AsS, CourseSem CS
+      WHERE S.StaffNumber = AsS.StaffNumber AND 
+            AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID LIKE &v_year1||'%'
+      GROUP BY S.Department) Y1,
+     (SELECT S.Department, 
+             COUNT(AsS.CourseSemID) TotalClass, 
+             SUM(cal_weekly_class_hr(CS.CourseSemType)) TotalHr, 
+             SUM(cal_weekly_class_hr(CS.CourseSemType))/cal_staff_by_dprt(S.Department) AvgHr
+      FROM  Staff S, AssignStaff AsS, CourseSem CS
+      WHERE S.StaffNumber = AsS.StaffNumber AND 
+            AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID LIKE &v_year2||'%'
+      GROUP BY S.Department) Y2
+WHERE S.Department = Y1.Department AND S.Department = Y2.Department
+GROUP BY S.Department, Y1.TotalClass, Y1.TotalHr, Y1.AvgHr, Y2.TotalClass, Y2.TotalHr, Y2.AvgHr
+ORDER BY 9 DESC;
+
+COLUMN IncHr HEADING "Increase In|Teaching Hour" FORMAT 999.99
+
+TTITLE CENTER 'Greater Increase In Teaching Hours' SKIP 1 CENTER '=================================='
+
+SELECT S.Department, cal_staff_by_dprt(S.Department) noStaff, Y1.AvgHr Y1AH, Y2.AvgHr Y2AH,
+       Y2.AvgHr-Y1.AvgHr IncHr, to_char((Y2.AvgHr-Y1.AvgHr)/Y1.AvgHr*100,'990.99')||' %' IncreaseRatio
+FROM Staff S, 
+     (SELECT S.Department, 
+             SUM(cal_weekly_class_hr(CS.CourseSemType))/cal_staff_by_dprt(S.Department) AvgHr
+      FROM  Staff S, AssignStaff AsS, CourseSem CS
+      WHERE S.StaffNumber = AsS.StaffNumber AND 
+            AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID LIKE &v_year1||'%'
+      GROUP BY S.Department) Y1,
+     (SELECT S.Department, 
+             SUM(cal_weekly_class_hr(CS.CourseSemType))/cal_staff_by_dprt(S.Department) AvgHr
+      FROM  Staff S, AssignStaff AsS, CourseSem CS
+      WHERE S.StaffNumber = AsS.StaffNumber AND 
+            AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID LIKE &v_year2||'%'
+      GROUP BY S.Department) Y2
+WHERE S.Department = Y1.Department AND S.Department = Y2.Department
+GROUP BY S.Department, Y1.AvgHr, Y2.AvgHr
+ORDER BY 5 DESC
+FETCH FIRST ROWS ONLY;
+
+COLUMN DecHr HEADING "Decrease In|Teaching Hour" FORMAT 990.99
+
+TTITLE CENTER 'Greater Decrease In Teaching Hours' SKIP 1 CENTER '=================================='
+
+SELECT S.Department, cal_staff_by_dprt(S.Department) noStaff, Y1.AvgHr Y1AH, Y2.AvgHr Y2AH,
+       Y2.AvgHr-Y1.AvgHr DecHr, to_char((Y2.AvgHr-Y1.AvgHr)/Y1.AvgHr*100,'990.99')||' %' IncreaseRatio
+FROM Staff S, 
+     (SELECT S.Department, 
+             SUM(cal_weekly_class_hr(CS.CourseSemType))/cal_staff_by_dprt(S.Department) AvgHr
+      FROM  Staff S, AssignStaff AsS, CourseSem CS
+      WHERE S.StaffNumber = AsS.StaffNumber AND 
+            AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID LIKE &v_year1||'%'
+      GROUP BY S.Department) Y1,
+     (SELECT S.Department, 
+             SUM(cal_weekly_class_hr(CS.CourseSemType))/cal_staff_by_dprt(S.Department) AvgHr
+      FROM  Staff S, AssignStaff AsS, CourseSem CS
+      WHERE S.StaffNumber = AsS.StaffNumber AND 
+            AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID LIKE &v_year2||'%'
+      GROUP BY S.Department) Y2
+WHERE S.Department = Y1.Department AND S.Department = Y2.Department
+GROUP BY S.Department, Y1.AvgHr, Y2.AvgHr
+ORDER BY 5
+FETCH FIRST ROWS ONLY;
+
+CLEAR COLUMN
+TTITLE OFF
+SET VERIFY ON

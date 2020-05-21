@@ -1,0 +1,22 @@
+
+INSERT INTO RegisterCourse VALUES (2712,'14-Oct-19','21-Oct-19','Cash','Pending',NULL,'1902050');
+
+INSERT INTO RegisterCourse VALUES (2712,'31-Oct-19','21-Oct-19','Cash','Pending',201909,'1902050');
+
+INSERT INTO RegisterCourse VALUES (2712,'14-Oct-19','21-Oct-19',NULL,'Pending',201909,'1902050');
+
+UPDATE RegisterCourse SET RegisterStatus = 'Success' WHERE RegisterID = 2712;
+UPDATE RegisterCourse SET PaymentDate = '14-Dec-19', PaymentMethod = 'Cash' WHERE RegisterID = 2712;
+UPDATE RegisterCourse SET RegisterStatus = 'Success' WHERE RegisterID = 2712;
+
+DELETE FROM RegisterCourse WHERE RegisterID = 2712;
+
+
+ALTER TRIGGER trg_chk_reg_cs DISABLE;
+ALTER TRIGGER trg_chk_reg_cs ENABLE;
+
+
+ALTER TRIGGER trg_chk_reg_cs DISABLE;
+DELETE FROM RegisterCourse WHERE RegisterID = 2712;
+ALTER TRIGGER trg_chk_reg_cs ENABLE;
+

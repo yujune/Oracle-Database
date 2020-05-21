@@ -1,0 +1,75 @@
+-- Calculate The Weekly Class Hour For One CourseSem Teached By Academic Staff Based On Course Sem Type, Where Lecture = 6hrs, Tutorial = 4hrs, Practical = 8hrs, Others = 2hrs.
+
+CREATE OR REPLACE FUNCTION cal_weekly_class_hr(v_csType in varchar)
+  RETURN NUMBER
+  IS weekly_hr NUMBER;
+
+  BEGIN
+    weekly_hr := 0;
+
+    CASE v_csType
+    WHEN 'Lecture' THEN
+        weekly_hr := 6;
+    WHEN 'Tutorial' THEN
+        weekly_hr := 4;
+    WHEN 'Practical' THEN
+        weekly_hr := 8;
+    ELSE
+        weekly_hr := 2;
+    END CASE;
+    RETURN weekly_hr;
+  END;
+/
+
+-- Calculate The Number OF Academic Staff Based On Department.
+
+CREATE OR REPLACE FUNCTION cal_staff_by_dprt(v_dprt in varchar)
+  RETURN NUMBER
+  IS staff_no NUMBER;
+
+  BEGIN
+    SELECT COUNT(StaffNumber) INTO staff_no
+    FROM Staff
+    WHERE Department = v_dprt AND StaffTitle NOT IN ('Dean','Deputy Dean','Associate Dean');
+    RETURN (staff_no);
+  END;
+/
+
+-- Function that return payment warning date which is 3 weeks after semester start date
+
+CREATE OR REPLACE FUNCTION get_pay_warn_date(v_SemID IN NUMBER) 
+   RETURN Date 
+   IS WarnDate Date;
+ BEGIN 
+   SELECT StartDate + 21 INTO WarnDate 
+   FROM Semester 
+   WHERE SemesterID = v_SemID; 
+   RETURN(WarnDate); 
+ END;
+/
+
+-- Function that return payment reject date which is 60 days after semester start date
+
+CREATE OR REPLACE FUNCTION get_pay_rjct_date(v_SemID IN NUMBER) 
+   RETURN Date 
+   IS RjctDate Date;
+ BEGIN 
+   SELECT StartDate + 60 INTO RjctDate 
+   FROM Semester 
+   WHERE SemesterID = v_SemID; 
+   RETURN(RjctDate); 
+ END;
+/
+
+-- Function that return last register date which is 14 days after semester start date
+
+CREATE OR REPLACE FUNCTION get_last_reg_date(v_SemID IN NUMBER) 
+   RETURN Date 
+   IS RegDate Date;
+ BEGIN 
+   SELECT StartDate + 14 INTO RegDate 
+   FROM Semester 
+   WHERE SemesterID = v_SemID; 
+   RETURN(RegDate); 
+ END;
+/

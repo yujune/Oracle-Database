@@ -1,0 +1,22 @@
+create or replace procedure programme_validate(p_id varchar,p_name varchar,p_icno varchar,p_contact varchar,
+p_dob date,p_email varchar,p_address varchar,p_state varchar,p_gender varchar)
+is is_valid int ;
+begin
+select count(*) into is_valid from learner
+where LearnerID=p_ID and
+      learnername=p_name and
+      icno=p_icno and
+      contact=p_contact and
+      dob=p_dob and
+      email=p_email and
+      address=P_address and
+      state=p_state and
+      gender=p_gender;
+if is_valid =0 then
+	raise_application_error(-20000,'Invalid data type enter');
+else
+   DBMS_OUTPUT.PUT_LINE('Correct data type insert');
+end if;
+end;
+/
+exec programme_validate(1701001,'Tan Bai Ying','951127-09-1751','018-6241311','27-Dec-95','tanby@student.tarc.edu.my','No.96, Lorong Kembang Lama, Taman Kembang Lama','Penang','F')

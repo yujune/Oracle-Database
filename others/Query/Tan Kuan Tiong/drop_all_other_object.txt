@@ -1,0 +1,19 @@
+DROP FUNCTION cal_staff_by_dprt;
+DROP FUNCTION cal_weekly_class_hr;
+DROP FUNCTION get_last_reg_date;
+DROP FUNCTION get_pay_rjct_date;
+DROP FUNCTION get_pay_warn_date;
+
+DROP PROCEDURE prc_print_unpay_rc_report;
+DROP PROCEDURE prc_print_wl_report;
+DROP PROCEDURE prc_print_ec_report;
+DROP PROCEDURE prc_staff_timetable;
+DROP PROCEDURE prc_validate_rc_status;
+DROP PROCEDURE prc_warn_payment;
+
+DROP TRIGGER trg_chk_ass_staff;
+DROP TRIGGER trg_chk_reg_cs;
+
+DROP SEQUENCE Announcement_Seq;
+
+DROP VIEW pend_reg_ob;

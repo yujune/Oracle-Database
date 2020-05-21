@@ -1,0 +1,74 @@
+-- This Procedure Will Update The Student Course Registration Status To Success If It Has Valid Payment Details And Pay Within 60 Days After Semester Start Date
+
+CREATE OR REPLACE PROCEDURE prc_validate_rc_status (v_semID IN NUMBER DEFAULT 201909) AS
+
+  v_startDate  Date;
+  v_endDate    Date;
+  v_chk_semID  NUMBER(6);
+  v_payMethod  VARCHAR(14);
+  v_payDate    Date;
+  v_count      NUMBER(3) := 0;
+
+  CURSOR rc_cursor IS
+     SELECT RC.PaymentMethod pm, RC.PaymentDate pd, RC.RegisterID rid, RC.LearnerID lid, L.LearnerName name 
+     FROM RegisterCourse RC, Learner L  
+     WHERE RC.LearnerID = L.LearnerID AND RC.SemesterID = v_semID AND RC.RegisterStatus = 'Pending' AND RC.PaymentDate >= v_startDate AND RC.PaymentDate < v_endDate AND RC.PaymentMethod IS NOT NULL AND RC.PaymentDate IS NOT NULL
+     ORDER BY 1, 2, 3;
+
+  rc_rec  rc_cursor%ROWTYPE;
+
+
+ BEGIN
+    SELECT SemesterID, StartDate, get_pay_rjct_date(v_semID) INTO v_chk_semID, v_startDate, v_endDate
+    FROM Semester
+    WHERE SemesterID = v_semID;
+
+    DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('Update Of Status On Valid Learner''s Course Registration',72,' ')||chr(10));
+    DBMS_OUTPUT.PUT_LINE('_No.'||'  '||'Payment Method'||'  '||'Payment Date'||'  '||'RegisterID'||'  '||'LearnerID'||'  '||'Learner Name');
+    DBMS_OUTPUT.PUT_LINE('===='||'  '||'=============='||'  '||'============'||'  '||'=========='||'  '||'========='||'  '||'==============================');
+
+    FOR rc_rec IN rc_cursor
+    LOOP       
+       UPDATE RegisterCourse
+       SET RegisterStatus = 'Success'
+       WHERE RegisterID = rc_rec.rid;
+
+       IF rc_rec.pm = v_payMethod THEN
+          IF rc_rec.pd = v_payDate THEN
+             DBMS_OUTPUT.PUT_LINE(chr(13)||TO_CHAR(rc_cursor%ROWCOUNT,'000')||'  '||
+                                  LPAD(rc_rec.rid,37,' ')||'  '||
+                                  LPAD(rc_rec.lid,11,' ')||'   '||
+                                  RPAD(rc_rec.name,30,' '));
+
+          ELSE
+             DBMS_OUTPUT.PUT_LINE(chr(13)||TO_CHAR(rc_cursor%ROWCOUNT,'000')||'  '||
+                                  LPAD(to_char(rc_rec.pd,'dd-Mon-yyyy'),27,' ')||'  '||
+                                  LPAD(rc_rec.rid,8,' ')||'  '||
+                                  LPAD(rc_rec.lid,11,' ')||'   '||
+                                  RPAD(rc_rec.name,30,' '));
+             v_payDate := rc_rec.pd;
+          END IF;
+       ELSE
+             DBMS_OUTPUT.PUT_LINE(chr(10)||TO_CHAR(rc_cursor%ROWCOUNT,'000')||'  '||
+                                  RPAD(rc_rec.pm,14,' ')||'  '||
+                                  RPAD(to_char(rc_rec.pd,'dd-Mon-yyyy'),15,' ')||'  '||
+                                  RPAD(rc_rec.rid,8,' ')||'  '||
+                                  RPAD(rc_rec.lid,8,' ')||'  '||
+                                  RPAD(rc_rec.name,30,' '));
+             v_payMethod := rc_rec.pm;
+             v_payDate := rc_rec.pd;
+       END IF;
+       v_count := rc_cursor%ROWCOUNT;
+    END LOOP;
+
+    IF v_count = 0 THEN
+       DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('No Register Status Is Updated.',60,' '));
+    ELSE
+       DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('Total of',32,' ')||to_char(v_count,'00')||' Register Statuses Are Updated.');
+    END IF;       
+
+    EXCEPTION
+       WHEN NO_DATA_FOUND THEN
+         RAISE_APPLICATION_ERROR(-20111,'Semester not Found. Please Enter A Correct Semester.');
+ END;
+/
