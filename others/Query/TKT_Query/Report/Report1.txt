@@ -1,0 +1,114 @@
+-- Print Student Registration Details With Unresolved Payment For Course Registered
+
+CREATE OR REPLACE PROCEDURE prc_print_unpay_rc_report(v_semID IN NUMBER DEFAULT 201909) AS
+    v_prog  VARCHAR(3); 
+
+    CURSOR  ln_cursor  IS
+       SELECT RegisterDate, RegisterID, RC.LearnerID, L.LearnerName, LP.ProgrammeCode
+       FROM RegisterCourse RC, Learner L, LearnerProgramme LP
+       WHERE RC.LearnerID = L.LearnerID AND L.LearnerID = LP.LearnerID AND
+             SemesterID = v_semID AND              
+             (RC.PaymentDate IS NULL OR RC.PaymentMethod IS NULL)
+       ORDER BY 1, 2, 3, 4;
+
+    ln_rec  ln_cursor%ROWTYPE;
+
+    CURSOR  prog_cursor  IS
+       SELECT C.CourseCode, CourseName, FeePerCH * CreditHour Fee
+       FROM ProgrammeCourse P, Course C
+       WHERE P.ProgrammeCode = v_prog AND
+             P.CourseCode = C.CourseCode AND 
+             P.Semester = CASE v_semID
+                             WHEN 201909 THEN 'Y3S2'
+                             WHEN 201905 THEN 'Y3S1'
+                             WHEN 201903 THEN 'Y3S3'
+                             WHEN 201809 THEN 'Y2S2'
+                             WHEN 201805 THEN 'Y2S1'
+                             WHEN 201803 THEN 'Y2S3'
+                             WHEN 201709 THEN 'Y1S2'
+                             WHEN 201705 THEN 'Y1S1'
+                             WHEN 201703 THEN 'Y1S3'
+                             ELSE 'Y3S2'
+                          END
+       ORDER BY 1;
+         
+    prog_rec  prog_cursor%ROWTYPE;
+    
+    v_studNo NUMBER(3)   := 0;
+    v_fee    NUMBER(6,2) := 0;
+    v_total  NUMBER(9,2) := 0;
+
+ BEGIN
+    DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('Student''s Registration Details With Unresolved Payment',63,' ')||
+                         chr(10)||LPAD('In Semester ',39,' ')||to_char(v_semID,'999999')||
+                         chr(10)||LPAD('===================',46,' '));    
+
+    FOR ln_rec IN ln_cursor
+    LOOP       
+       v_fee := 0;
+
+       DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('Student No. :',41,' ')||
+                            to_char(ln_cursor%ROWCOUNT,'000')||
+                            chr(10)||LPAD('=================',45,' '));
+       DBMS_OUTPUT.PUT_LINE('Student ID   : '||RPAD(ln_rec.learnerID,20,' ')||'Student Name : '||ln_rec.learnerName);
+       DBMS_OUTPUT.PUT_LINE('Programme    : '||ln_rec.ProgrammeCode);
+       DBMS_OUTPUT.PUT_LINE('RegisterID   : '||RPAD(ln_rec.RegisterID,20,' ')||'RegisterDate : '||ln_rec.RegisterDate);
+
+       DBMS_OUTPUT.PUT_LINE(chr(10)||'Course Registered');
+       DBMS_OUTPUT.PUT_LINE('=================');
+       DBMS_OUTPUT.PUT_LINE('No.'||'  '||
+                            'Course Code'||'  '||
+                            RPAD('Course Name',40,' ')||'   '||
+                            'Fees (RM)');
+       DBMS_OUTPUT.PUT_LINE('---'||'  '||
+                            '-----------'||'  '||
+                            RPAD('-',40,'-')||'  '||
+                            '-----------');       
+
+       v_prog := ln_rec.ProgrammeCode;
+
+       FOR prog_rec IN prog_cursor
+       LOOP
+          DBMS_OUTPUT.PUT_LINE(to_char(prog_cursor%ROWCOUNT,'000')||'   '||
+                               RPAD(prog_rec.CourseCode,10,' ')||'  '||
+                               RPAD(prog_rec.CourseName,40,' ')||'  RM'||
+                               to_char(prog_rec.Fee, '9,999.99'));
+          v_fee := v_fee + prog_rec.Fee;
+       END LOOP;
+
+       DBMS_OUTPUT.PUT_LINE('---'||'  '||
+                            '-----------'||'  '||
+                            RPAD('-',40,'-')||'  '||
+                            '***********'||chr(10)||
+                            LPAD('Individual Student''s Sum : RM',62,' ')||
+                            to_char(v_fee, '9,999.99')||chr(10));
+       v_studNo := ln_cursor%ROWCOUNT;
+       v_total := v_total + v_fee;
+
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE(chr(10)||'No. of Students With Unresolved Payment : '||v_studNo);
+    DBMS_OUTPUT.PUT_LINE('Total Of Outstanding Students'' Payment  : RM'||to_char(v_total, '9,999,999.99'));
+    DBMS_OUTPUT.PUT_LINE(LPAD('END OF REPORT',42,'-')||RPAD('-',29,'-'));
+
+ END;
+/
+
+ALTER TRIGGER trg_chk_reg_cs DISABLE;
+DELETE FROM RegisterCourse WHERE RegisterID > 2700;
+ALTER TRIGGER trg_chk_reg_cs ENABLE;
+
+INSERT INTO RegisterCourse VALUES (2701,'14-Oct-19',NULL,NULL,'Pending',201909,'1902041');
+INSERT INTO RegisterCourse VALUES (2702,'14-Oct-19',NULL,NULL,'Pending',201909,'1902042');
+INSERT INTO RegisterCourse VALUES (2703,'14-Oct-19',NULL,NULL,'Pending',201909,'1902043');
+--INSERT INTO RegisterCourse VALUES (2704,'14-Oct-19',NULL,NULL,'Pending',201909,'1902044');
+--INSERT INTO RegisterCourse VALUES (2705,'14-Oct-19',NULL,NULL,'Pending',201909,'1902045');
+--INSERT INTO RegisterCourse VALUES (2706,'14-Oct-19',NULL,NULL,'Pending',201909,'1902046');
+--INSERT INTO RegisterCourse VALUES (2707,'14-Oct-19',NULL,NULL,'Pending',201909,'1902047');
+--INSERT INTO RegisterCourse VALUES (2708,'14-Oct-19',NULL,NULL,'Pending',201909,'1902048');
+--INSERT INTO RegisterCourse VALUES (2709,'14-Oct-19',NULL,NULL,'Pending',201909,'1902049');
+--INSERT INTO RegisterCourse VALUES (2710,'14-Oct-19',NULL,NULL,'Pending',201909,'1902050');
+
+
+set linesize 200
+
+EXEC prc_print_unpay_rc_report;

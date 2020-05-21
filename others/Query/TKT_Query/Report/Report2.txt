@@ -1,0 +1,105 @@
+
+CREATE OR REPLACE PROCEDURE prc_print_wl_report(v_y1 IN NUMBER DEFAULT 2018,
+                                                v_y2 IN NUMBER DEFAULT 2019) AS
+
+    v_dpmt VARCHAR(40) := 'Department of Information Technology';
+
+    CURSOR  staff_cursor  IS
+       SELECT Department, cal_staff_by_dprt(Department) noStaff
+       FROM Staff
+       GROUP BY Department;
+    staff_rec  staff_cursor%ROWTYPE;
+
+    CURSOR  tchr_cursor  IS
+       SELECT Y1.TotalClass Y1TC, Y1.TotalHr Y1TH,  Y1.AvgHr Y1AH, Y2.TotalClass Y2TC, Y2.TotalHr Y2TH, Y2.AvgHr Y2AH, (Y2.AvgHr-Y1.AvgHr)/Y1.AvgHr*100 IncRatio
+       FROM
+       (SELECT COUNT(AsS.CourseSemID) TotalClass, 
+               SUM(cal_weekly_class_hr(CS.CourseSemType)) TotalHr, 
+               SUM(cal_weekly_class_hr(CS.CourseSemType))/cal_staff_by_dprt(v_dpmt) AvgHr
+        FROM  Staff S, AssignStaff AsS, CourseSem CS
+        WHERE S.StaffNumber = AsS.StaffNumber AND S.Department = v_dpmt AND
+              AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID LIKE v_y1||'%') Y1,
+       (SELECT COUNT(AsS.CourseSemID) TotalClass, 
+               SUM(cal_weekly_class_hr(CS.CourseSemType)) TotalHr, 
+               SUM(cal_weekly_class_hr(CS.CourseSemType))/cal_staff_by_dprt(v_dpmt) AvgHr
+        FROM  Staff S, AssignStaff AsS, CourseSem CS
+        WHERE S.StaffNumber = AsS.StaffNumber AND S.Department = v_dpmt AND
+              AsS.CourseSemID = CS.CourseSemID AND CS.SemesterID LIKE v_y2||'%') Y2;
+    tchr_rec  tchr_cursor%ROWTYPE;
+
+    v_max_dpmt VARCHAR(40);
+    v_max_hr   NUMBER(4,2);
+    v_max_rate NUMBER(5,2);
+    v_min_dpmt VARCHAR(40);
+    v_min_hr   NUMBER(4,2);
+    v_min_rate NUMBER(5,2);
+
+ BEGIN
+    IF (v_y1 < 2017 OR v_y1 > 2019) OR (v_y2 < 2017 OR v_y2 > 2019) THEN
+       RAISE_APPLICATION_ERROR(-20110,'Please Enter Valid Academic Year From 2017 To 2019 Only.');
+    END IF;
+
+    OPEN tchr_cursor;
+    FETCH tchr_cursor INTO tchr_rec;
+       v_max_dpmt := v_dpmt;
+       v_max_hr := tchr_rec.Y2AH;
+       v_max_rate := ROUND(tchr_rec.IncRatio,2);
+       v_min_dpmt := v_dpmt;
+       v_min_hr := tchr_rec.Y2AH;
+       v_min_rate := ROUND(tchr_rec.IncRatio,2);
+    CLOSE tchr_cursor;
+
+    FOR staff_rec IN staff_cursor
+    LOOP
+       v_dpmt := staff_rec.Department;
+       DBMS_OUTPUT.PUT_LINE(chr(10)||chr(10)||LPAD('Department : ',16,' ')||staff_rec.Department||chr(10)||RPAD(' ',53,'-'));       
+
+       DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('Year',11,' ')||to_char(v_y1,'9999')||LPAD('Year',26,' ')||to_char(v_y2,'9999')||
+                            chr(10)||LPAD('=========',16,' ')||LPAD('=========',31,' '));
+
+       OPEN tchr_cursor;
+       FETCH tchr_cursor INTO tchr_rec;       
+       WHILE tchr_cursor%FOUND
+       LOOP
+          DBMS_OUTPUT.PUT_LINE('Total Class  :'||to_char(tchr_rec.Y1TC,'999999')||LPAD('|',6,' ')||LPAD('Total Class  :',19,' ')||to_char(tchr_rec.Y2TC,'999999'));
+          DBMS_OUTPUT.PUT_LINE('Total Hour   :'||to_char(tchr_rec.Y1TH,'999999')||LPAD('|',6,' ')||LPAD('Total Hour   :',19,' ')||to_char(tchr_rec.Y2TH,'999999'));
+          DBMS_OUTPUT.PUT_LINE('Average Hour :'||to_char(tchr_rec.Y1AH,'999.99')||LPAD('|',6,' ')||LPAD('Average Hour :',19,' ')||to_char(tchr_rec.Y2AH,'999.99'));
+          DBMS_OUTPUT.PUT_LINE(LPAD('-',53,'-')||chr(10)||'Increase Ratio : '||to_char(tchr_rec.IncRatio,'990.99')||'%');
+
+          IF tchr_rec.Y2AH > v_max_hr THEN
+             v_max_dpmt := staff_rec.Department;
+             v_max_hr := tchr_rec.Y2AH;
+             v_max_rate := ROUND(tchr_rec.IncRatio,2);
+          ELSIF tchr_rec.Y2AH < v_min_hr THEN
+             v_min_dpmt := staff_rec.Department;
+             v_min_hr := tchr_rec.Y2AH;
+             v_min_rate := ROUND(tchr_rec.IncRatio,2);
+          END IF;
+
+          FETCH tchr_cursor INTO tchr_rec;
+       END LOOP;
+       CLOSE tchr_cursor;
+    END LOOP;       
+                                        
+    DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('Workload Summary',49,' ')||chr(10)||LPAD('================',49,' '));
+    DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD('Heaviest Workload',29,' ')||LPAD('Lightest Workload',40,' ')||
+                         chr(10)||LPAD('=================',29,' ')||LPAD('=================',40,' '));
+    DBMS_OUTPUT.PUT_LINE(chr(10)||LPAD(v_max_dpmt,38,' ')||LPAD('|',3,' ')||'   '||v_min_dpmt);
+    DBMS_OUTPUT.PUT_LINE('-'||' Average Hours   :'||to_char(v_max_hr,'999.99')||LPAD('|',15,' ')||LPAD('Average Hours   :',20,' ')||to_char(v_min_hr,'999.99')||
+                         chr(10)||'  Increased Ratio :'||to_char(v_max_rate,'990.99')||LPAD('|',15,' ')||LPAD('Increased Ratio :',20,' ')||to_char(v_min_rate,'990.99'));
+    DBMS_OUTPUT.PUT_LINE(LPAD('END OF REPORT',46,'-')||RPAD('-',33,'-'));
+ END;
+/
+
+set linesize 150
+
+PROMPT 
+PROMPT This Query Will Show The Average Staff Workload Details For Each Department In 2 Academic Years.
+PROMPT Please Enter 2 Academic Years To Proceed.
+PROMPT
+ACCEPT v_year1 NUMBER FORMAT 9999 PROMPT 'Enter the Year 1 > '
+ACCEPT v_year2 NUMBER FORMAT 9999 PROMPT 'Enter the Year 2 > '
+
+EXEC prc_print_wl_report(&v_year1,&v_year2);
+
+

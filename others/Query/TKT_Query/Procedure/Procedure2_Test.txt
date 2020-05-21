@@ -1,0 +1,21 @@
+
+set linesize 92
+
+
+EXEC prc_validate_rc_status (201105);
+EXEC prc_validate_rc_status (201905);
+EXEC prc_validate_rc_status (201909);
+
+
+SELECT PaymentMethod, PaymentDate, RegisterID, LearnerID, RegisterStatus
+FROM RegisterCourse
+WHERE PaymentDate IS NOT NULL And PaymentMethod IS NOT NULL AND RegisterStatus = 'Pending' AND PaymentDate >= '14-Oct_19' AND PaymentDate < get_pay_rjct_date(201909) AND SemesterID = 201909
+ORDER BY 1, 2, 3;
+
+SELECT RegisterID, RegisterStatus
+FROM RegisterCourse
+WHERE RegisterID IN (2451,2452,2453,2459,2481,2484,2509,2632,2638,2646,2647,2668,2677,2697);
+
+UPDATE RegisterCourse
+SET RegisterStatus = 'Pending'
+WHERE RegisterID IN (2451,2452,2453,2459,2481,2484,2509,2632,2638,2646,2647,2668,2677,2697);

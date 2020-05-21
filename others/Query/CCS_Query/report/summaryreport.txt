@@ -1,0 +1,19 @@
+create or replace procedure summary_assessment(v_assessmentid in number)
+as cursor prod_cursor is 
+      select * from assessment
+      where assessmentid=v_assessmentid;
+   prod_rec prod_cursor%rowtype;
+
+begin
+   DBMS_OUTPUT.PUT_LINE('-------------------Summary Report of Assessment--------------------');
+   DBMS_OUTPUT.PUT_LINE('Assessment ID:'||v_assessmentid);
+FOR Prod_rec IN Prod_cursor LOOP
+      DBMS_OUTPUT.PUT_LINE('The total mark of all assessment is '||(prod_rec.totalmark));
+      DBMS_OUTPUT.PUT_LINE('The all student must above '||prod_rec.passingmark||' then only can pass');
+      DBMS_OUTPUT.PUT_LINE('There have three assessment type it is assigment,midterm and partical');
+end loop;
+end;
+/
+
+
+exec summary_assessment(10001);

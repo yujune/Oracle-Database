@@ -1,0 +1,19 @@
+create or replace trigger upd_ass
+before update of studentmark on learnerassessment
+for each row
+declare
+       
+begin
+
+if (:new.studentmark>49) then
+
+      :new.status :='Pass';
+else 
+      :new.status:='Fail';
+      :new.grade:='F';
+end if;
+end;
+/
+update learnerassessment
+set studentmark=48
+where assessmentid=10001 and learnerid='1701001';

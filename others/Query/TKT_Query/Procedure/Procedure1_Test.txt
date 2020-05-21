@@ -1,0 +1,60 @@
+SET LINESIZE 107
+
+-- INSERT TEST DATA
+DELETE FROM RegisterCourse WHERE RegisterID > 2700;
+
+INSERT INTO RegisterCourse VALUES (2701,'14-Oct-19',NULL,NULL,'Pending',201909,'1902041');
+INSERT INTO RegisterCourse VALUES (2702,'14-Oct-19',NULL,NULL,'Pending',201909,'1902042');
+INSERT INTO RegisterCourse VALUES (2703,'14-Oct-19',NULL,NULL,'Pending',201909,'1902043');
+INSERT INTO RegisterCourse VALUES (2704,'14-Oct-19',NULL,NULL,'Pending',201909,'1902044');
+INSERT INTO RegisterCourse VALUES (2705,'14-Oct-19',NULL,NULL,'Pending',201909,'1902045');
+INSERT INTO RegisterCourse VALUES (2706,'14-Oct-19',NULL,NULL,'Pending',201909,'1902046');
+INSERT INTO RegisterCourse VALUES (2707,'14-Oct-19',NULL,NULL,'Pending',201909,'1902047');
+INSERT INTO RegisterCourse VALUES (2708,'14-Oct-19',NULL,NULL,'Pending',201909,'1902048');
+INSERT INTO RegisterCourse VALUES (2709,'14-Oct-19',NULL,NULL,'Pending',201909,'1902049');
+INSERT INTO RegisterCourse VALUES (2710,'14-Oct-19',NULL,NULL,'Pending',201909,'1902050');
+
+SELECT RegisterID, RegisterDate, RegisterStatus, SemesterID, LearnerID FROM RegisterCourse WHERE PaymentDate IS NULL OR PaymentMethod IS NULL;
+
+EXEC prc_warn_payment;
+EXEC prc_warn_payment('04-Nov-19');
+
+SELECT RegisterID from RegisterCourse WHERE RegisterStatus = 'Reject';
+UPDATE RegisterCourse SET RegisterStatus = 'Pending' WHERE RegisterID BETWEEN 2701 AND 2710 AND RegisterStatus = 'Reject';
+
+--- TEST ERROR DATA
+
+INSERT INTO RegisterCourse VALUES (2711,'14-Oct-19',NULL,'Cash','Pending',201909,'1902050');
+DELETE FROM RegisterCourse WHERE RegisterID = 2711;
+
+-- CHECK output
+
+
+
+CLEAR COLUMN
+CLEAR BREAK
+CLEAR COMPUTE
+TTITLE OFF
+
+COLUMN AnnouncementID HEADING 'ID' FORMAT 9999
+COLUMN AnnouncementDate HEADING 'Announce|Date'
+COLUMN ExpiryDate HEADING 'Expiry|Date'
+COLUMN Title HEADING 'Title' FORMAT A23
+COLUMN Description HEADING 'Description' FORMAT A50
+COLUMN StaffNumber HEADING 'Staff' FORMAT 99999
+
+SELECT * FROM Announcement WHERE AnnouncementID > 1033;
+SELECT * FROM LearnerAnnouncement WHERE AnnouncementID > 1033;
+
+CLEAR COLUMN
+CLEAR BREAK
+CLEAR COMPUTE
+TTITLE OFF
+
+
+DELETE FROM LearnerAnnouncement WHERE AnnouncementID > 1033;
+DELETE FROM Announcement WHERE AnnouncementID > 1033;
+
+ALTER TRIGGER trg_chk_reg_cs DISABLE;
+DELETE FROM RegisterCourse WHERE RegisterID > 2700;
+ALTER TRIGGER trg_chk_reg_cs ENABLE;

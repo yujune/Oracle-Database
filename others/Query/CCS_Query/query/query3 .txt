@@ -1,0 +1,6 @@
+select c.coursename,a.coursesemtype,s.staffname
+from course c,coursesem a,assignstaff b,staff s
+where c.coursecode=a.coursecode
+and a.coursesemid=b.coursesemid and
+b.staffnumber=s.staffnumber and
+s.staffname='Encik Ong Jia Hui';

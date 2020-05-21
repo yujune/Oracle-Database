@@ -1,0 +1,7 @@
+create sequence topic_seq
+minvalue 150
+maxvalue 9999999999999999999999999999999
+start with 150
+increment by 1
+nocache;
+INSERT INTO Topic VALUES (topic_seq.nextval,90051,100529,'Business Organisation and Management','Discuss business organisation','14-May-19');

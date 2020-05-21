@@ -1,0 +1,3 @@
+UPDATE RegisterCourse SET RegisterStatus = 'Success' WHERE PaymentDate < '09-Nov-19';
+
+

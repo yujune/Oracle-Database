@@ -1,0 +1,10 @@
+DROP SEQUENCE Announcement_Seq;
+
+-- Create Announcement Sequence
+
+CREATE SEQUENCE Announcement_Seq
+MINVALUE 1034
+MAXVALUE 9999
+START WITH 1034
+INCREMENT BY 1
+NOCACHE;

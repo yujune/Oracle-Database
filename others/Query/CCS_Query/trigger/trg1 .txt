@@ -1,0 +1,20 @@
+create or replace trigger check_student
+before insert on learnerassessment
+for each row
+declare
+       v_learnerid varchar(7);
+begin
+	select learnerid into v_learnerid
+	from learner
+	where learnerid = :new.learnerid;
+DBMS_OUTPUT.PUT_LINE('The learner is exist');
+
+exception
+  when no_data_found 
+  then RAISE_APPLICATION_ERROR(-20200,'The learner is not exist');
+
+end;
+/
+INSERT INTO LearnerAssessment VALUES (10869,'1902052',66.0,'B','Pass');
+
+INSERT INTO LearnerAssessment VALUES (10868,'1902050',76.0,'A-','Pass');

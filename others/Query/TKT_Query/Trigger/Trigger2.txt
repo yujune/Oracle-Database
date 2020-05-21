@@ -1,0 +1,41 @@
+-- attempt to prevent insert new register course, which is new register of student if it is over 14 days prior to semester start date and validate the update of student register status by admin staff to prevent invalid payment details and overdue payment
+
+CREATE OR REPLACE TRIGGER trg_chk_reg_cs 
+ BEFORE INSERT OR
+        UPDATE OR
+        DELETE ON RegisterCourse
+ FOR EACH ROW
+
+ DECLARE
+    v_studID  VARCHAR(7) := '1900050';
+    v_regID   NUMBER(5) := 2712;
+
+ BEGIN
+    CASE
+       WHEN INSERTING THEN
+          IF :NEW.RegisterDate >= get_last_reg_date(:NEW.SemesterID) THEN
+             RAISE_APPLICATION_ERROR(-20104, chr(10)||'Registration Period For This Semester Has Ended.'||chr(10)||'Hence, The Registration Is Not Accepted.');
+          END IF;
+
+       WHEN UPDATING THEN
+          IF :OLD.RegisterStatus = 'Pending' AND :NEW.RegisterStatus = 'Success' THEN
+             IF :NEW.PaymentDate IS NULL OR :NEW.PaymentMethod IS NULL THEN
+                RAISE_APPLICATION_ERROR(-20105, chr(10)||'The Payment Detail Is Not Valid.'||chr(10)||'Please Double Check The Payment Detail To Prevent Human Error.');
+
+             ELSIF :NEW.PaymentDate >= get_pay_rjct_date(:NEW.SemesterID) THEN
+                RAISE_APPLICATION_ERROR(-20106, chr(10)||'This Is An Overdue Payment Which Should Be Rejected.'||chr(10)||'Hence, Update Of Register Status To Success Will Not Be Executed.');
+             END IF;
+          END IF;
+
+       WHEN DELETING THEN
+          IF MONTHS_BETWEEN(SYSDATE,:OLD.RegisterDate) < 7 THEN
+             RAISE_APPLICATION_ERROR(-20107, chr(10)||'The Register And Payment Record Of Learner Should Be Kept'||chr(10)||' For 7 Years Before Removing.');
+          END IF;
+    END CASE;
+    
+    EXCEPTION
+       WHEN NO_DATA_FOUND THEN
+          RAISE_APPLICATION_ERROR(-20108, chr(10)||'Please Select The Correct Semester Before Register.');
+ END;
+/
+

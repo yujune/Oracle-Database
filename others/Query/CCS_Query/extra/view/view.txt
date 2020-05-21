@@ -1,0 +1,8 @@
+
+create or replace view learner_assessment as
+select *
+from learnerassessment
+where grade='F';
+
+select status,studentmark,assessmentid
+from learner_assessment;

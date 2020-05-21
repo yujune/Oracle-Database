@@ -1,0 +1,54 @@
+-- Create View That Display Learner's Course Registration Who Paid By Online Banking That Is Still Pending For Validation
+
+CREATE OR REPLACE VIEW pend_reg_OB(PaymentMethod, RegisterDate, PaymentDate, RegisterID, LearnerID, ProgrammeCode, GroupID, CourseCode) AS
+   SELECT RC.PaymentMethod, RC.RegisterDate, RC.PaymentDate, RC.RegisterID, RC.LearnerID, LP.ProgrammeCode, LP.GroupID, PC.CourseCode
+   FROM RegisterCourse RC, 
+        (SELECT LearnerID, ProgrammeCode, GroupID
+         FROM LearnerProgramme) LP, 
+        (SELECT ProgrammeCode, CourseCode
+         FROM ProgrammeCourse
+         WHERE Semester = 'Y3S2') PC 
+   WHERE RC.LearnerID = LP.LearnerID AND LP.ProgrammeCode = PC.ProgrammeCode AND RC.SemesterID = 201909 AND RC.RegisterStatus = 'Pending' AND RC.PaymentDate IS NOT NULL AND RC.PaymentMethod = 'Online Banking'
+   GROUP BY RC.PaymentMethod, RC.RegisterDate, RC.PaymentDate, RC.RegisterID, RC.LearnerID, LP.ProgrammeCode, LP.GroupID, PC.CourseCode
+   ORDER BY 1, 2, 3, 4, 5;
+
+-- Necessary Formatting Of View Table
+
+set linesize 73
+set pagesize 36
+
+COLUMN PaymentMethod FORMAT A14 HEADING 'Payment|Method'
+COLUMN RegisterDate FORMAT A9 HEADING 'Register|Date'
+COLUMN PaymentDate FORMAT A9 HEADING 'Payment|Date'
+COLUMN RegisterID FORMAT 99999 HEADING 'Register|ID'
+COLUMN LearnerID HEADING 'Learner|ID'
+COLUMN ProgrammeCode FORMAT A5 HEADING 'Prog|Code'
+COLUMN GroupID FORMAT 99 HEADING 'Group|ID'
+COLUMN CourseCode FORMAT A8 HEADING 'Course|Code'
+
+TTITLE CENTER 'Pending Registration For Students In Semester 201909' SKIP 1 CENTER 'With Online Banking' SKIP 1 RIGHT 'Page :' FORMAT 99 SQL.PNO SKIP 2
+
+BREAK ON REPORT ON PaymentMethod ON RegisterDate ON PaymentDate ON RegisterID ON LearnerID ON ProgrammeCode ON GroupID SKIP 1 ON RegisterID
+
+-- Display the View Table
+set feedback off
+
+SELECT * FROM pend_reg_OB;
+
+-- Clear Formatting
+
+CLEAR BREAK
+CLEAR COLUMN
+TTITLE OFF
+
+DECLARE 
+   v_countRegID NUMBER(3) := 0;
+BEGIN
+   SELECT COUNT(DISTINCT RegisterID) INTO v_countRegID FROM pend_reg_OB;
+   DBMS_OUTPUT.PUT_LINE('-------------- --------- --------- -------- ------- ----- ----- --------');
+   DBMS_OUTPUT.PUT_LINE('Total Number Of Student:'||LPAD(v_countRegID,27,' '));
+END;
+/
+
+set feedback on
+

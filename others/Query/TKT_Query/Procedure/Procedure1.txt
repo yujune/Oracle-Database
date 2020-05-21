@@ -1,0 +1,80 @@
+-- Create Procedure That Will Warn Or Reject Learner's Registration If User Did Not Pay The Registration Fee Within 21 Days and 60 Days Respectively. Warning And Rejection Will Be Sent Or Informed To The Student Indivually Through Announcement. 
+
+CREATE OR REPLACE PROCEDURE prc_warn_payment(v_chkDate IN Date DEFAULT SYSDATE, 
+                                             v_SemID IN NUMBER DEFAULT 201909) AS
+
+  v_rjctDate    Date;
+  v_warnDate    Date;
+  v_countRjct   NUMBER(3);
+  v_countWarn   NUMBER(3);
+  v_announSeq   NUMBER(4);
+  v_errMsg      Varchar(100);
+
+  pay_format_invalid EXCEPTION;
+  PRAGMA exception_init(pay_format_invalid, -20101);
+
+  CURSOR reg_cursor IS
+         SELECT LP.ProgrammeCode, RegisterID, RegisterStatus, RC.LearnerID, LearnerName, SemesterID, PaymentDate, PaymentMethod 
+         FROM RegisterCourse RC, Learner L, LearnerProgramme LP 
+         WHERE RC.LearnerID = L.LearnerID AND L.LearnerID = LP.LearnerID AND RC.SemesterID = v_SemID AND (PaymentDate IS NULL OR PaymentMethod IS NULL)
+         ORDER BY 1, 2, 3;
+
+  reg_rec  reg_cursor%ROWTYPE;
+
+ BEGIN
+    v_rjctDate := get_pay_rjct_date(v_SemID);
+    v_warnDate := get_pay_warn_date(v_SemID);
+
+    v_countRjct := 0;
+    v_countWarn := 0;
+
+    v_announSeq := 0;
+
+    -- linesize 78
+    DBMS_OUTPUT.PUT_LINE('Warning Or Rejection Of Student For Course Registration Payment'||chr(10));
+
+    DBMS_OUTPUT.PUT_LINE(' No.'||'  '||'Programme'||'  '||'RegisterID'||'  '||'LearnerID'||'  '||RPAD('LearnerName',30,' ')||'  '||'Status');
+    DBMS_OUTPUT.PUT_LINE(' ---'||'  '||'---------'||'  '||'----------'||'  '||'---------'||'  '||RPAD('-',30,'-')          ||'  '||'-------');           
+
+    FOR reg_rec IN reg_cursor
+    LOOP
+        IF (reg_rec.PaymentDate IS NULL AND reg_rec.PaymentMethod IS NOT NULL) OR (reg_rec.PaymentDate IS NOT NULL AND reg_rec.PaymentMethod IS NULL) THEN
+            v_errMsg := 'RegisterID '||reg_rec.RegisterID||' do not have a valid payment record. Please check to prevent human error.';
+            raise_application_error(-20101,v_errMsg);
+
+        ELSIF v_chkDate >= v_rjctDate AND reg_rec.RegisterStatus <> 'Reject' THEN
+            DBMS_OUTPUT.PUT_LINE(to_char(reg_cursor%ROWCOUNT,'000')||'     '||
+                                 RPAD(reg_rec.ProgrammeCode,9,' ') ||'  '|| 
+                                 RPAD(reg_rec.RegisterID,8,' ')    ||'  '||
+                                 RPAD(reg_rec.LearnerID,8,' ')     ||'  '||
+                                 RPAD(reg_rec.LearnerName,30,' ')  ||'  '||'Reject');
+
+            UPDATE RegisterCourse SET RegisterStatus = 'Reject' WHERE RegisterID = reg_rec.RegisterID;
+
+            v_announSeq := Announcement_Seq.nextval;
+            INSERT INTO Announcement VALUES (v_announSeq,v_chkDate,v_chkDate + 31,'Rejection Of Learner Registration',
+                                             'Learner '||reg_rec.LearnerName||'('||reg_rec.LearnerID||') Was Rejected To Enroll The Courses Due To Overdue Payment',90001);
+            INSERT INTO LearnerAnnouncement VALUES (v_announSeq,reg_rec.LearnerID,NULL);
+            v_countRjct := v_countRjct + 1;
+
+        ELSIF v_chkDate >= v_warnDate AND reg_rec.RegisterStatus <> 'Reject' THEN
+            DBMS_OUTPUT.PUT_LINE(to_char(reg_cursor%ROWCOUNT,'000')||'     '||
+                                 RPAD(reg_rec.ProgrammeCode,9,' ') ||'  '|| 
+                                 RPAD(reg_rec.RegisterID,8,' ')    ||'  '||
+                                 RPAD(reg_rec.LearnerID,8,' ')     ||'  '||
+                                 RPAD(reg_rec.LearnerName,30,' ')  ||'  '||'Warning');
+
+            v_announSeq := Announcement_Seq.nextval;
+            INSERT INTO Announcement VALUES (v_announSeq,v_chkDate,v_rjctDate,'Warning Of Registration Payment',
+                                             'Learner '||reg_rec.LearnerName||'('||reg_rec.LearnerID||') Was Advised To Pay The Registration Fee Before '||v_rjctDate||'.',90001);
+            INSERT INTO LearnerAnnouncement VALUES (v_announSeq,reg_rec.LearnerID,NULL);
+            v_countWarn := v_countWarn + 1;
+        
+        END IF;
+    END LOOP; 
+
+    DBMS_OUTPUT.PUT_LINE(chr(10)||'No. of Rejection    : '||v_countRjct);
+    DBMS_OUTPUT.PUT_LINE('No. of Warning Sent : '||v_countWarn);
+ END;
+/
+

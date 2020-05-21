@@ -1,0 +1,50 @@
+-- attempt to create trigger than will stop the staff assignment to course sem if his weekly classes and teaching hours is over a certain limit in a semester, (9,54 respectively);
+
+CREATE OR REPLACE TRIGGER trg_chk_ass_staff 
+ BEFORE INSERT ON AssignStaff
+ FOR EACH ROW
+
+ DECLARE
+    v_noClass  NUMBER(2) := 0;
+    v_noHour   NUMBER(3) := 0;
+    v_staffNo  NUMBER(5) := 0;
+    v_csType   VARCHAR(9) := 'Lecture';
+
+    err_Msg    VARCHAR(200);
+
+    No_Staff_Found EXCEPTION;
+    PRAGMA exception_init(No_Staff_Found, -20102);
+    Teach_OverLimit EXCEPTION;
+    PRAGMA exception_init(Teach_OverLimit, -20103);
+
+ BEGIN
+    SELECT StaffNumber INTO v_staffNo FROM Staff WHERE StaffNumber = :NEW.StaffNumber;
+
+    SELECT COUNT(ACS.CourseSemID), SUM(cal_weekly_class_hr(ACS.CourseSemType))
+    INTO v_noClass, v_noHour
+    FROM Staff S LEFT OUTER JOIN 
+         (SELECT AsS.StaffNumber, CS.CourseSemID, CS.CourseSemType
+          FROM AssignStaff AsS LEFT OUTER JOIN CourseSem CS ON AsS.CourseSemID = CS.CourseSemID
+          WHERE CS.SemesterID = 201909) ACS ON S.StaffNumber = ACS.StaffNumber
+    WHERE S.StaffNumber = v_staffNo;    
+
+    IF (v_noClass + 1 > 9) OR (v_noHour + 4 > 54) THEN
+        err_Msg := chr(10)||'Weekly Teaching Classes Or Hours For Staff '||v_staffNo||' Is Over The Limit.'||chr(10);
+        err_Msg := err_Msg||'Hence, This Staff Will Not Be Assigned To Teach This Course Semester.'||chr(10);
+        RAISE_APPLICATION_ERROR(-20103, err_Msg);
+    ELSE
+        SELECT CourseSemType INTO v_csType
+        FROM CourseSem
+        WHERE CourseSemID = :NEW.CourseSemID;
+        
+        DBMS_OUTPUT.PUT_LINE(' Weekly Workload For Staff '||:NEW.StaffNumber);
+        DBMS_OUTPUT.PUT_LINE(' No. of Class: '||(v_noClass + 1));
+        DBMS_OUTPUT.PUT_LINE(' No. of Hours: '||(v_noHour + cal_weekly_class_hr(v_csType)));
+    END IF;
+    EXCEPTION
+       WHEN NO_DATA_FOUND THEN
+         RAISE_APPLICATION_ERROR(-20102,'StaffNumber Is Not Valid. The Staff Must Be A Current Academic Staff.');
+ END;
+/
+
+

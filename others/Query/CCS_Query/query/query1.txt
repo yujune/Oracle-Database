@@ -1,0 +1,8 @@
+
+select * from(select l.learnerid,l.learnername,sum(a.studentmark/32)as highestmark
+from learner l,learnerassessment a
+where l.learnerid=a.learnerid
+group by l.learnerid,l.learnername
+order by 3 desc
+)
+where rownum<=3;
