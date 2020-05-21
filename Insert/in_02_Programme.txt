@@ -1,0 +1,10 @@
+INSERT INTO Programme VALUES ('RSF','Bachelor in Software Engineering','This programme will cover the artificial intelligence and mostly based on Software Engineering Fundamentals.',0);
+INSERT INTO Programme VALUES ('RIS','Bachelor in Information Security','This programme will cover the fundamentals of Internet and Cyber-security.',0);
+INSERT INTO Programme VALUES ('RIT','Bachelor in Internet Technology','This programme will cover the fundamentals of Internet Technology.',0);
+INSERT INTO Programme VALUES ('REI','Bachelor in Interactive Software Technology','This programme will cover the fundamentals of Interactive Software Technology.',0);
+INSERT INTO Programme VALUES ('RSD','Bachelor in Software System Development','This programme will cover the fundamentals of Software System Development',0);
+INSERT INTO Programme VALUES ('DSE','Diploma in Software Engineering','This programme will cover the fundamentals of and basic knowledge of Software Engineering',0);
+INSERT INTO Programme VALUES ('DIT','Diploma in Internet Technology','This programme will cover the fundamentals of Internet Technology.',0);
+INSERT INTO Programme VALUES ('DST','Diploma in Interactive Software Technology','This programme will cover the fundamentals and basic of Interactive Software Technology.',0);
+
+select count(*) from Programme;

@@ -1,0 +1,11 @@
+INSERT INTO Semester VALUES (201703,'02-Mar-17','24-May-17','Short');
+INSERT INTO Semester VALUES (201705,'28-May-17','13-Oct-17','Long');
+INSERT INTO Semester VALUES (201709,'14-Oct-17','01-Mar-18','Long');
+INSERT INTO Semester VALUES (201803,'02-Mar-18','24-May-18','Short');
+INSERT INTO Semester VALUES (201805,'28-May-18','13-Oct-18','Long');
+INSERT INTO Semester VALUES (201809,'14-Oct-18','01-Mar-19','Long');
+INSERT INTO Semester VALUES (201903,'02-Mar-19','24-May-19','Short');
+INSERT INTO Semester VALUES (201905,'28-May-19','13-Oct-19','Long');
+INSERT INTO Semester VALUES (201909,'14-Oct-19','01-Mar-20','Long');
+
+select count(*) from Semester;
