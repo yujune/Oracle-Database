@@ -1,0 +1,11 @@
+CREATE TABLE LearnerProgramme (
+    LearnerID       varchar(7),
+    ProgrammeCode   char(3),
+    EnrolmentDate   date       NOT NULL,
+    GroupID         number(2),
+    Primary key(LearnerID,ProgrammeCode),
+    Foreign Key(LearnerID) references Learner(LearnerID),
+    Foreign Key(ProgrammeCode) references Programme(ProgrammeCode)
+);
+
+

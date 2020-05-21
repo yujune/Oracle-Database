@@ -1,0 +1,14 @@
+CREATE TABLE LearnerAssessment (
+    AssessmentID  number(5),
+    LearnerID     varchar(7) ,
+    StudentMark   number(5,2),
+    Grade         varchar(2),
+    Status        varchar(4),
+    Primary key(AssessmentID,LearnerID),
+    Foreign key(AssessmentID) references Assessment(AssessmentID),
+    Foreign key(LearnerID) references Learner(LearnerID),
+    CONSTRAINT chk_studMark CHECK(StudentMark BETWEEN 0 AND 100),
+    CONSTRAINT chk_grade CHECK(Grade IN('A','A-','B+','B','B-','C+','C','C-','D')),
+    CONSTRAINT chk_status CHECK(Status IN('Pass','Fail'))
+);
+

@@ -1,0 +1,16 @@
+CREATE TABLE Learner (
+    LearnerID     varchar(7)   NOT NULL,
+    LearnerName   varchar(20)  NOT NULL,
+    ICNo          varchar(14),
+    Contact       varchar(11),
+    DOB           date,
+    email         varchar(30),
+    address       varchar(100),
+    state         varchar(20),
+    gender        char(1),
+    Primary key(LearnerID),
+    CONSTRAINT chk_ic CHECK(REGEXP_LIKE(ICNo,'[0-9]{6}-[0-9]{2}-[0-9]{4}')),
+    CONSTRAINT chk_contact CHECK(REGEXP_LIKE(Contact,'[0-9]{3}-[0-9]{7}')),
+    CONSTRAINT chk_email CHECK(email LIKE '%@%.%' AND email NOT LIKE '@%' AND email NOT LIKE '%@%@%'),
+    CONSTRAINT chk_gender CHECK(gender IN('M','F'))
+);

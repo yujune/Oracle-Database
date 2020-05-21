@@ -1,0 +1,16 @@
+CREATE TABLE Assessment (
+    AssessmentID  number(5),
+    description   varchar(100),
+    StartDate     date,
+    EndDate       date,
+    TotalMark     number(5,2),
+    PassingMark   number(5,2),
+    AssessmentType varchar(20),
+    CourseSemID   number(6),
+    Primary key(AssessmentID),
+    Foreign Key(CourseSemID) references CourseSem(CourseSemID),
+    CONSTRAINT chk_totalMark CHECK(TotalMark >=0),
+    CONSTRAINT chk_passMark CHECK(PassingMark BETWEEN 30 AND 50),
+    CONSTRAINT chk_assType CHECK (AssessmentType IN('Assignment','Practical Test','Midterm'))
+);
+

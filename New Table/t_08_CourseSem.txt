@@ -1,0 +1,15 @@
+CREATE TABLE CourseSem (
+    CourseSemID    number(6),
+    CourseCode     varchar(8),
+    SemesterID     number(6),
+    CourseSemType  varchar(9),
+    Day            varchar(3),
+    Time           varchar(9),
+    Primary key(CourseSemID),
+    Foreign Key(CourseCode) references Course(CourseCode),
+    Foreign Key(SemesterID) references Semester(SemesterID),
+    CONSTRAINT chk_csType CHECK(CourseSemType IN('Lecture','Tutorial','Practical')),
+    CONSTRAINT chk_csTime CHECK(REGEXP_LIKE(Time,'[0-9]{4}-[0-9]{4}'))
+);
+
+

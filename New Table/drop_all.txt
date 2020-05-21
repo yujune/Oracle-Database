@@ -1,0 +1,16 @@
+drop table LearnerAssessment;
+drop table Topic;
+drop table LearnerAnnouncement;
+drop table AssignStaff;
+drop table CourseDetail;
+drop table Assessment;
+drop table RegisterCourse;
+drop table Announcement;
+drop table CourseSem;
+drop table ProgrammeCourse;
+drop table LearnerProgramme;
+drop table Staff;
+drop table Course;
+drop table Semester;
+drop table Programme;
+drop table Learner;

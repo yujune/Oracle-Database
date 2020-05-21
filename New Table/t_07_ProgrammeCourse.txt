@@ -1,0 +1,9 @@
+CREATE TABLE ProgrammeCourse (
+    ProgrammeCode  char(3),
+    CourseCode     varchar(8),
+    Semester       char(4),
+    Primary key(ProgrammeCode,CourseCode),
+    Foreign Key(ProgrammeCode) references Programme(ProgrammeCode),
+    Foreign Key(CourseCode) references Course(CourseCode)
+);
+

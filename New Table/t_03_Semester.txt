@@ -1,0 +1,10 @@
+CREATE TABLE Semester (
+    SemesterID    Number(6),
+    StartDate     date,
+    EndDate       date,
+    SemesterType  varchar(5),
+    Primary key(SemesterID),
+    CONSTRAINT chk_SemType CHECK(SemesterType IN('Long','Short'))
+);
+
+

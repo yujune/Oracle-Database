@@ -1,0 +1,12 @@
+CREATE TABLE Announcement (
+    AnnouncementID   number(4),
+    AnnouncementDate date,
+    ExpiryDate       date,
+    Title            varchar(50),
+    Description      varchar(200),
+    StaffNumber      number(5),
+    Primary key(AnnouncementID),
+    Foreign Key(StaffNumber) references Staff(StaffNumber)
+);
+
+

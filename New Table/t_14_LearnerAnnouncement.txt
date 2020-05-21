@@ -1,0 +1,10 @@
+CREATE TABLE LearnerAnnouncement (
+    AnnouncementID  number(4),
+    LearnerID       varchar(7),
+    GroupID         number(2),
+    Primary key(AnnouncementID,LearnerID),
+    Foreign Key(AnnouncementID) references Announcement(AnnouncementID),
+    Foreign Key(LearnerID) references Learner(LearnerID)
+);
+
+

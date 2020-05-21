@@ -1,0 +1,15 @@
+CREATE TABLE Course (
+    CourseCode  varchar(8),
+    CourseName  varchar(80),
+    CourseType  varchar(20),
+    CourseDesc  varchar(130),
+    FeePerCH    number(6,2),
+    CreditHour  number(1),
+    CourseFee   number(6,2),
+    Primary key(CourseCode),
+    CONSTRAINT chk_courseType CHECK(CourseType IN('Compulsory','Elective','Core','Core Elective')),
+    CONSTRAINT chk_feePerCH CHECK(FeePerCH >= 100.00),
+    CONSTRAINT chk_creditHour CHECK(CreditHour BETWEEN 1 AND 3) 
+);
+
+

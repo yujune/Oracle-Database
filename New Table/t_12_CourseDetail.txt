@@ -1,0 +1,14 @@
+CREATE TABLE CourseDetail (
+    RegisterID   number(5),
+    CourseSemID  number(6),
+    Day          varchar(3),
+    Time         varchar(9),
+    Semester     number(6),
+    Primary key(RegisterID,CourseSemID,Semester),
+    Foreign Key(RegisterID) references RegisterCourse(RegisterID),
+    Foreign Key(CourseSemID) references CourseSem(CourseSemID),
+    Foreign Key(Semester) references Semester(SemesterID),
+    CONSTRAINT chk_cdTime CHECK(REGEXP_LIKE(Time,'[0-9]{4}-[0-9]{4}'))
+);
+
+

@@ -1,0 +1,12 @@
+CREATE TABLE Topic (
+    TopicID      number(3),
+    StaffNumber  number(5),
+    CourseSemID  number(6),
+    Title        varchar(50),
+    TopicDetails varchar(200),
+    TopicDate    date,
+    Primary key(TopicID,StaffNumber,CourseSemID),
+    Foreign key(StaffNumber) references Staff(StaffNumber),
+    Foreign key(CourseSemID) references CourseSem(CourseSemID)   
+);
+

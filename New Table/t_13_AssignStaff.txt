@@ -1,0 +1,9 @@
+CREATE TABLE AssignStaff (
+    CourseSemID  number(6),
+    StaffNumber  number(5),
+    AssignDate   date,
+    Primary key(CourseSemID,StaffNumber),
+    Foreign key(CourseSemID) references CourseSem(CourseSemID),
+    Foreign key(StaffNumber) references Staff(StaffNumber)
+);
+

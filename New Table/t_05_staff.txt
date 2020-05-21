@@ -1,0 +1,12 @@
+CREATE TABLE Staff (
+    StaffNumber  number(5)    NOT NULL,
+    StaffName    varchar(40)  NOT NULL,
+    Contact      varchar(12),
+    StaffTitle   varchar(20)  NOT NULL,
+    email        varchar(30),
+    DOB          date         NOT NULL,
+    Primary key(StaffNumber),
+    CONSTRAINT chk_staffContact CHECK(REGEXP_LIKE(Contact,'[0-9]{3}-[0-9]{7}|[0-9]{3}-[0-9]{8}')),
+    CONSTRAINT chk_staffEmail CHECK(email LIKE '%@%.%' AND email NOT LIKE '@%' AND email NOT LIKE '%@%@%')
+);
+

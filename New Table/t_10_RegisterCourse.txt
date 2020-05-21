@@ -1,0 +1,15 @@
+CREATE TABLE RegisterCourse (
+    RegisterID      number(5),
+    RegisterDate    date,
+    PaymentDate     date,
+    PaymentMethod   varchar(20),
+    RegisterStatus  varchar(10),
+    Semester        number(6),
+    LearnerID       varchar(7),
+    Primary key(RegisterID),
+    Foreign Key(LearnerID) references Learner(LearnerID),
+    Foreign Key(Semester) references Semester(SemesterID),
+    CONSTRAINT chk_payMethod CHECK(PaymentMethod IN('Online Banking','Cash','JomPay')),
+    CONSTRAINT chk_regStatus CHECK (RegisterStatus IN('Pending','Success'))
+);
+

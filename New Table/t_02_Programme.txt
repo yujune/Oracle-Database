@@ -1,0 +1,9 @@
+CREATE TABLE Programme (
+    ProgrammeCode char(3),
+    ProgrammeName varchar(50),
+    ProgrammeDesc varchar(130),
+    TotalCreditHours Number(3),
+    Primary key(ProgrammeCode),
+    CONSTRAINT chk_tch CHECK(TotalCreditHours >= 0)
+);
+
